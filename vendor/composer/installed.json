@@ -1,0 +1,58 @@
+{
+    "packages": [
+        {
+            "name": "nicebooks/isbn",
+            "version": "0.3.6",
+            "version_normalized": "0.3.6.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/nicebooks-com/isbn.git",
+                "reference": "8860f19bb7ec438b831e3f20f36637443440ca9b"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/nicebooks-com/isbn/zipball/8860f19bb7ec438b831e3f20f36637443440ca9b",
+                "reference": "8860f19bb7ec438b831e3f20f36637443440ca9b",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^7.4 || ^8.0"
+            },
+            "require-dev": {
+                "brick/varexporter": "~0.3.0",
+                "ext-dom": "*",
+                "php-coveralls/php-coveralls": "^2.0",
+                "phpunit/phpunit": "^9.0",
+                "vimeo/psalm": "^4.8"
+            },
+            "time": "2021-10-28T21:36:45+00:00",
+            "type": "library",
+            "installation-source": "dist",
+            "autoload": {
+                "psr-4": {
+                    "Nicebooks\\Isbn\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "ISBN tools",
+            "keywords": [
+                "ISBN",
+                "ISBN-10",
+                "ISBN-13",
+                "Nicebooks",
+                "book",
+                "books"
+            ],
+            "support": {
+                "issues": "https://github.com/nicebooks-com/isbn/issues",
+                "source": "https://github.com/nicebooks-com/isbn/tree/0.3.6"
+            },
+            "install-path": "../nicebooks/isbn"
+        }
+    ],
+    "dev": true,
+    "dev-package-names": []
+}

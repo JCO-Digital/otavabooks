@@ -1,0 +1,5 @@
+{
+    "require": {
+        "nicebooks/isbn": "^0.3.6"
+    }
+}
