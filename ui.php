@@ -6,15 +6,20 @@ namespace otavabooks;
  * Main function hooked to the tools menu.
  */
 function show_book_import_page() {
+	$books = read_books();
+
 	echo '
         <p>
             <a class="button action" href="?page=book-import&amp;fetchdata=1">Fetch Data</a>
         </p>';
 
-	echo '
+	if ( ! empty( $books ) ) {
+		echo "Books: " . count( $books );
+		echo '
         <p>
             <a class="button action" href="?page=book-import&amp;bookimport=1">Import Book</a>
         </p>';
+	}
 
 	if ( WP_DEBUG ) {
 		echo '
@@ -27,7 +32,12 @@ function show_book_import_page() {
 	if ( is_admin() && ! empty( $_GET['fetchdata'] ) ) {
 
 		$books = make_book_list();
-		$json  = wp_json_encode( $books );
+		foreach ( $books as $id => $book ) {
+			if ( count( $book['versions'] ) > 1 ) {
+				var_dump( $book );
+			}
+		}
+		$json = wp_json_encode( $books );
 		file_put_contents( IMPORT_BOOK_DATA, $json );
 		echo 'Test';
 	}

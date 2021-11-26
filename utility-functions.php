@@ -4,7 +4,7 @@ function delete_books( $delete = 20 ) {
 	$deleted = 0;
 	$args    = array(
 		'post_type'   => IMPORT_POST_TYPE,
-		'numberposts' => $delete
+		'numberposts' => $delete,
 	);
 	foreach ( get_posts( $args ) as $post ) {
 		wp_delete_post( $post->ID, true );
@@ -23,4 +23,10 @@ function get_upload_dir( $path = 'otavabooks' ) {
 	}
 
 	return $folder;
+}
+
+function read_books() {
+	$json  = file_get_contents( IMPORT_BOOK_DATA );
+
+	return json_decode( $json, true );
 }
