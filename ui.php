@@ -32,20 +32,14 @@ function show_book_import_page() {
 	if ( is_admin() && ! empty( $_GET['fetchdata'] ) ) {
 
 		$books = make_book_list();
-		foreach ( $books as $id => $book ) {
-			if ( count( $book['versions'] ) > 1 ) {
-				var_dump( $book );
-			}
-		}
-		$json = wp_json_encode( $books );
+		$json  = wp_json_encode( $books );
 		file_put_contents( IMPORT_BOOK_DATA, $json );
-		echo 'Test';
 	}
 	echo '</p>';
 
 	echo '<p>';
 	if ( is_admin() && ! empty( $_GET['bookimport'] ) && ctype_digit( $_GET['bookimport'] ) ) {
-		echo 'Test';
+		echo import_books( wp_unslash( $_GET['bookimport'] ) );
 	}
 	echo '</p>';
 

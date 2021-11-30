@@ -15,7 +15,7 @@ function make_book_list() {
 	$tools = new IsbnTools();
 	$data  = array();
 	foreach ( get_import_data() as $row ) {
-		if ( isset( $row->kantanumero) && in_array( strtolower( $row->tulosyksikkö ), IMPORT_PUBLISHERS, true ) && $tools->isValidIsbn( $row->isbn ) ) {
+		if ( isset( $row->kantanumero ) && in_array( strtolower( $row->tulosyksikkö ), IMPORT_PUBLISHERS, true ) && $tools->isValidIsbn( $row->isbn ) ) {
 			try {
 				$isbn    = Isbn::of( $row->isbn );
 				$version = add_version( $isbn->to13()->format(), $row );
@@ -52,17 +52,25 @@ function make_book_list() {
 			}
 		}
 	}
+	foreach ( $data as $id => $book ) {
+		if ( empty( $book['isbn'] ) ) {
+			unset( $data[ $id ] );
+		}
+	}
 
 	return $data;
 }
 
 function add_version( $isbn, $row ) {
+	$asu = explode( ' ', $row->asu, 2 );
+
 	return array(
 		'isbn'       => $isbn,
 		'tuotemuoto' => $row->tuotemuoto,
 		'tyyppi'     => $row->tyyppi,
 		'pages'      => $row->laajus_sivua,
-		'asu'        => $row->asu,
+		'asu_code'   => $asu[0],
+		'asu_text'   => $asu[1],
 	);
 }
 
@@ -71,14 +79,14 @@ function add_book( $row, $isbn, $versions = array(), $timestamp = 0 ) {
 
 	return array(
 		'isbn'           => $isbn,
-		'title'          => $row->onix_tuotenimi,
-		'sub_title'      => $row->alaotsikko,
-		'description'    => $row->markkinointiteksti,
+		'title'          => wp_strip_all_tags( $row->onix_tuotenimi ),
+		'sub_title'      => wp_strip_all_tags( $row->alaotsikko ),
+		'content'        => $row->markkinointiteksti,
 		'ilmestymis'     => $row->ilmestymis_vvvvkk,
-		'authors'        => parse_names( $row->kirjantekija ),
-		'kuvittaja'      => parse_names( $row->kuvittaja ),
-		'suomentaja'     => parse_names( $row->suomentaja ),
-		'toimittaja'     => parse_names( $row->toimittaja ),
+		'authors'        => parse_list( $row->kirjantekija ),
+		'kuvittaja'      => parse_list( $row->kuvittaja ),
+		'suomentaja'     => parse_list( $row->suomentaja ),
+		'toimittaja'     => parse_list( $row->toimittaja ),
 		'tuoteryhma'     => array( trim( $row->tuoteryhma ) ),
 		'tulosyksikko'   => $row->tulosyksikkö,
 		'alkuteos'       => $row->alkuteos,
@@ -91,16 +99,22 @@ function add_book( $row, $isbn, $versions = array(), $timestamp = 0 ) {
 			'yleiseenmyyntiin' => $row->yleiseenmyyntiinpvm,
 		),
 		'thema'          => $thema,
-		'keywords'       => $row->avainsanat,
+		'keywords'       => parse_list( $row->avainsanat ),
 		'versions'       => $versions,
 		'timestamp'      => $row->muutosaikaleima,
 	);
 }
 
-function parse_names( $field ) {
-	$names = explode( ';', $field );
+function parse_list( $field ) {
+	$items = array();
+	foreach ( explode( ';', $field ) as $raw ) {
+		$item = trim( $raw );
+		if ( ! empty( $item ) ) {
+			$items[] = $item;
+		}
+	}
 
-	return $names;
+	return $items;
 }
 
 /**
@@ -123,6 +137,24 @@ function get_import_data() {
 	}
 
 	return array();
+}
+
+/**
+ * @param int $max Maximum imported items per run.
+ */
+function import_books( $max = 1 ) {
+	$nr   = 0;
+	$isbn = get_isbn_list();
+	foreach ( read_books() as $id => $book ) {
+		if ( ! in_array( $book['isbn'], $isbn, true ) ) {
+			if ( create_book_object( $book ) ) {
+				$nr ++;
+			}
+		}
+		if ( $nr >= $max ) {
+			break;
+		}
+	}
 }
 
 
