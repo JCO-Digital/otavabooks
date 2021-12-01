@@ -15,7 +15,7 @@ function make_book_list() {
 	$tools = new IsbnTools();
 	$data  = array();
 	foreach ( get_import_data() as $row ) {
-		if ( isset( $row->kantanumero ) && in_array( strtolower( $row->tulosyksikkö ), IMPORT_PUBLISHERS, true ) && $tools->isValidIsbn( $row->isbn ) ) {
+		if ( isset( $row->kantanumero ) && in_array( strtolower( $row->tulosyksikko ), IMPORT_PUBLISHERS, true ) && $tools->isValidIsbn( $row->isbn ) ) {
 			try {
 				$isbn    = Isbn::of( $row->isbn );
 				$version = add_version( $isbn->to13()->format(), $row );
@@ -82,13 +82,13 @@ function add_book( $row, $isbn, $versions = array(), $timestamp = 0 ) {
 		'title'          => wp_strip_all_tags( $row->onix_tuotenimi ),
 		'sub_title'      => wp_strip_all_tags( $row->alaotsikko ),
 		'content'        => $row->markkinointiteksti,
-		'ilmestymis'     => $row->ilmestymis_vvvvkk,
+		'ilmestymis'     => substr($row->ilmestymis_vvvvkk, 4).'/'.substr($row->ilmestymis_vvvvkk, 0,4),
 		'authors'        => parse_list( $row->kirjantekija ),
 		'kuvittaja'      => parse_list( $row->kuvittaja ),
 		'suomentaja'     => parse_list( $row->suomentaja ),
 		'toimittaja'     => parse_list( $row->toimittaja ),
 		'tuoteryhma'     => array( trim( $row->tuoteryhma ) ),
-		'tulosyksikko'   => $row->tulosyksikkö,
+		'tulosyksikko'   => $row->tulosyksikko ?? 'otava',
 		'alkuteos'       => $row->alkuteos,
 		'kirjastoluokka' => $row->kirjastoluokka,
 		'sarja'          => $row->sarja ?? '',
@@ -124,11 +124,19 @@ function parse_list( $field ) {
  */
 function get_import_data() {
 	$data = file_get_contents( IMPORT_FILE_PATH );
+
+	//$data = str_replace( '},{', "},\n{", $data );
+
+
+	//$data = str_replace( '​', '', $data );
+	//$data = str_replace( ' ', '', $data );
+	//$data = str_replace( '­', '', $data );
+
 	//$data = str_replace( "\n", '', $body );
 	//$data = str_replace( "\r", '', $data );
 
 	if ( ! empty( $data ) ) {
-		$parsed_data = json_decode( $data );
+		$parsed_data = json_decode( $data, null, 512, JSON_INVALID_UTF8_SUBSTITUTE );
 		if ( ! empty( $parsed_data ) && is_array( $parsed_data ) ) {
 			return $parsed_data;
 		}

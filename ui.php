@@ -26,6 +26,11 @@ function show_book_import_page() {
         <p>
             <a class="button action" href="?page=book-import&amp;bookdelete=30">Delete all books (remove for production)</a>
         </p>';
+
+		echo '
+        <p>
+            <a class="button action" href="?page=book-import&amp;termdelete=30">Delete unused terms (remove for production)</a>
+        </p>';
 	}
 
 	echo '<p>';
@@ -35,21 +40,25 @@ function show_book_import_page() {
 		$json  = wp_json_encode( $books );
 		file_put_contents( IMPORT_BOOK_DATA, $json );
 	}
-	echo '</p>';
 
-	echo '<p>';
+	// Import Books.
 	if ( is_admin() && ! empty( $_GET['bookimport'] ) && ctype_digit( $_GET['bookimport'] ) ) {
 		echo import_books( wp_unslash( $_GET['bookimport'] ) );
 	}
-	echo '</p>';
 
-	echo '<p>';
+	// Delete Books.
 	if ( is_admin() && ! empty( $_GET['bookdelete'] ) && ctype_digit( $_GET['bookdelete'] ) ) {
 		$deleted = delete_books( $_GET['bookdelete'] );
 		if ( $deleted == $_GET['bookdelete'] ) {
 			echo '<script type="text/javascript">window.location.reload();</script>';
 		}
 	}
+
+	// Clean up terms.
+	if ( is_admin() && ! empty( $_GET['termdelete'] ) && ctype_digit( $_GET['termdelete'] ) ) {
+		clean_terms( $_GET['termdelete'] );
+	}
+
 	echo '</p>';
 
 }

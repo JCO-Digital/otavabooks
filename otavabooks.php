@@ -20,30 +20,31 @@ require_once 'vendor/autoload.php';
 require_once 'cpt-otava-book.php';
 require_once 'acf-fields.php';
 require_once 'ui.php';
-require_once 'import-functions.php';
-require_once 'utility-functions.php';
-require_once 'book-functions.php';
+require_once 'otava-import.php';
+require_once 'utility.php';
+require_once 'otava-book.php';
+require_once 'author.php';
 
 //define( 'IMPORT_FILE_PATH', 'https://tuotetiedot.otava.fi/otava-kirjallisuus.json' );
-define( 'IMPORT_FILE_PATH', get_upload_dir() . '/tuotepainos_fixed.json' );
-define( 'IMPORT_PUBLISHERS', [ 'otava', 'moreeni', 'f-kustannus', 'nemo' ] );
-define( 'IMPORT_POST_TYPE', 'otava_book' );
-define( 'IMPORT_AUTHOR_TYPE', 'otava_author' );
-define( 'IMPORT_AUTHOR', 11 );
-define( 'IMPORT_BOOK_DATA', get_upload_dir() . '/book_data.json' );
+define('IMPORT_FILE_PATH', get_upload_dir() . '/fixed.json');
+define('IMPORT_PUBLISHERS', ['', 'moreeni', 'f-kustannus', 'nemo']);
+define('IMPORT_POST_TYPE', 'otava_book');
+define('IMPORT_AUTHOR_TYPE', 'otava_author');
+define('IMPORT_AUTHOR', 11);
+define('IMPORT_BOOK_DATA', get_upload_dir() . '/book_data.json');
 
-add_action( 'admin_menu', 'otavabooks\book_import_menu' );
+add_action('admin_menu', 'otavabooks\book_import_menu');
 
 /**
  * Adds menu to WP Admin
  */
 function book_import_menu() {
 	$parent_slug = 'tools.php';
-	$page_title  = 'Otava Kirjatuonti';
-	$menu_title  = 'Tuo Kirjoja';
-	$capability  = 'manage_options';
-	$menu_slug   = 'book-import';
-	$function    = 'otavabooks\show_book_import_page';
+	$page_title = 'Otava Kirjatuonti';
+	$menu_title = 'Tuo Kirjoja';
+	$capability = 'manage_options';
+	$menu_slug = 'book-import';
+	$function = 'otavabooks\show_book_import_page';
 
 	add_submenu_page(
 		$parent_slug,

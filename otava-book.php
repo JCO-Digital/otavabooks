@@ -29,7 +29,7 @@ function create_book_object( array $item, array $tags = [] ) {
 		$new_book['post_date'] = $date . ' 00:00:00';
 	}
 
-	if ( ! empty( $item['isbn'] ) ) {
+	if ( ! empty( $item['isbn'] ) && ! empty( $item['kuvittaja'] ) && ! empty( $item['suomentaja'] ) ) {
 		// Insert the post into the database.
 		$post_id = wp_insert_post( $new_book );
 		if ( ! empty( $post_id ) ) {
@@ -52,68 +52,70 @@ function create_book_object( array $item, array $tags = [] ) {
  */
 function update_book_meta( $post_id, $item ) {
 	// Get the categories.
-	$tags       = [];
-	$categories = [];
+	$tags       = array();
+	$categories = array();
 
-	/* TODO
-	if ( ! empty( $item->tuoteryhma ) ) {
-		$category     = cat_name( $item->tuoteryhma );
-		$categories[] = $category;
-		$tags[]       = $category;
+	if ( ! empty( $item['tuoteryhma'] ) ) {
+		foreach ( $item['tuoteryhma'] as $tuoteryhma ) {
+			$category     = get_otava_cat( $tuoteryhma );
+			$categories[] = $category;
+			$tags[]       = $category;
+		}
 	}
-	*/
 
 	if ( ! empty( $item['alkuteos'] ) ) {
 		update_field( 'alkuteos', $item['alkuteos'], $post_id );
 	}
 	if ( ! empty( $item['ilmestymis'] ) ) {
-		update_field( 'julkaisuaika', $item['ilmestymis'] . '01', $post_id );
+		update_field( 'julkaisuaika', $item['ilmestymis'], $post_id );
 	}
 	if ( ! empty( $item['kirjastoluokka'] ) ) {
 		update_field( 'kirjastoluokka', $item['kirjastoluokka'], $post_id );
 	}
-	/*
-	if ( ! empty( $item->kuvittaja ) ) {
-		$kuvittaja = [];
-		foreach ( explode( ';', $item->kuvittaja ) as $name ) {
+	if ( ! empty( $item['kuvittaja'] ) ) {
+		$kuvittaja = array();
+		foreach ( $item['kuvittaja'] as $name ) {
 			$kuvittaja[] = parse_name( $name );
 			$tags[]      = parse_name( $name );
 		}
 		if ( ! empty( $kuvittaja ) ) {
-			wp_set_post_terms( $post_id, $kuvittaja, IMPORT_PREFIX . 'kuvittaja', false );
+			wp_set_post_terms( $post_id, $kuvittaja, 'otava_kuvittaja', false );
 		}
 	}
-	if ( ! empty( $item->suomentaja ) ) {
-		$suomentaja = [];
-		foreach ( explode( ';', $item->suomentaja ) as $name ) {
+	if ( ! empty( $item['suomentaja'] ) ) {
+		$suomentaja = array();
+		foreach ( $item['suomentaja'] as $name ) {
 			$suomentaja[] = parse_name( $name );
 			$tags[]       = parse_name( $name );
 		}
 		if ( ! empty( $suomentaja ) ) {
-			wp_set_post_terms( $post_id, $suomentaja, IMPORT_PREFIX . 'kaantaja', false );
+			wp_set_post_terms( $post_id, $suomentaja, 'otava_kaantaja', false );
 		}
 	}
-	*/
 	if ( ! empty( $item['sarja'] ) ) {
 		wp_set_post_terms( $post_id, [ $item['sarja'] ], 'otava_sarja', false );
 		$tags[] = $item['sarja'];
 	}
-	/* TODO Versions
-	if ( ! empty( $item['asu'] ) ) {
-		wp_set_post_terms( $post_id, [ $item['asu'] ], 'otava_sidosasu', false );
+	$asu = array();
+	foreach ( $item['versions'] as $version ) {
+		if ( ! in_array( $version['asu_text'], $asu, true ) ) {
+			$asu[] = $version['asu_text'];
+		}
 	}
-	*/
+	if ( ! empty( $asu ) ) {
+		wp_set_post_terms( $post_id, $asu, 'otava_sidosasu', false );
+	}
 	if ( ! empty( $item['tulosyksikko'] ) ) {
 		wp_set_post_terms( $post_id, [ $item['tulosyksikko'] ], 'otava_julkaisija', false );
 		$tags[] = $item['tulosyksikko'];
 	}
 
 	$toimittanut = [];
-	if ( ! empty( $item->kirjantekija ) ) {
-		$toimittanut = match_authors( $post_id, $item->kirjantekija, $tags );
+	if ( ! empty( $item['authors'] ) ) {
+		$toimittanut = match_authors( $post_id, $item['authors'], $tags );
 	}
-	if ( ! empty( $item->toimittaja ) ) {
-		foreach ( explode( ';', $item->toimittaja ) as $name ) {
+	if ( ! empty( $item['toimittaja'] ) ) {
+		foreach ( $item['toimittaja'] as $name ) {
 			$toimittanut[] = parse_name( $name );
 			$tags[]        = parse_name( $name );
 		}
@@ -136,8 +138,8 @@ function update_book_meta( $post_id, $item ) {
  * @param $versions - The json data from the import.
  */
 function update_book_versions( $post_id, $versions ) {
-	foreach ($versions as $version) {
-		add_row('versions', $version, $post_id);
+	foreach ( $versions as $version ) {
+		add_row( 'versions', $version, $post_id );
 	}
 }
 
@@ -158,4 +160,49 @@ function get_books() {
 	$sql       = "SELECT post.*, meta.meta_value as isbn FROM $tablename AS post LEFT JOIN $tablemeta AS meta on post.ID = meta.post_id AND meta.meta_key = 'isbn' WHERE post.post_type = '" . IMPORT_POST_TYPE . "' ORDER BY post.post_date DESC";
 
 	return $wpdb->get_results( $sql, ARRAY_A );
+}
+
+$categories = get_json( __DIR__ . '/categories.json' );
+function get_otava_cat( $raw, $default = 'Muut' ) {
+	global $categories;
+	$orig     = trim( $raw );
+	$category = $default;
+	$found    = false;
+	foreach ( $categories as $cat => $search ) {
+		if ( in_array( $orig, $search ) ) {
+			$category = $cat;
+			$found    = true;
+			break;
+		}
+	}
+	if ( ! $found ) {
+		$needle = preg_replace( '/[^a-zåäö]+/u', '', mb_strtolower( $orig ) );
+		$dist   = ceil( strlen( $needle ) / 16 );
+		foreach ( $categories as $cat => $search ) {
+			foreach ( $search as $item ) {
+				if ( levenshtein( $needle, preg_replace( '/[^a-zåäö]+/u', '', mb_strtolower( $item ) ) ) <= $dist ) {
+					$category = $cat;
+					break 2;
+				}
+			}
+		}
+	}
+
+	return $category;
+}
+
+/**
+ * Changes the name into firstname lastname format.
+ *
+ * @param $name
+ *
+ * @return mixed|string
+ */
+function parse_name( $name ) {
+	$parts = explode( ',', $name, 2 );
+	if ( count( $parts ) > 1 ) {
+		return trim( $parts[1] ) . ' ' . trim( $parts[0] );
+	}
+
+	return $name;
 }
