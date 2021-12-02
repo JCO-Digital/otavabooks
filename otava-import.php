@@ -82,7 +82,7 @@ function add_book( $row, $isbn, $versions = array(), $timestamp = 0 ) {
 		'title'          => wp_strip_all_tags( $row->onix_tuotenimi ),
 		'sub_title'      => wp_strip_all_tags( $row->alaotsikko ),
 		'content'        => $row->markkinointiteksti,
-		'ilmestymis'     => substr($row->ilmestymis_vvvvkk, 4).'/'.substr($row->ilmestymis_vvvvkk, 0,4),
+		'ilmestymis'     => substr( $row->ilmestymis_vvvvkk, 4 ) . '/' . substr( $row->ilmestymis_vvvvkk, 0, 4 ),
 		'authors'        => parse_list( $row->kirjantekija ),
 		'kuvittaja'      => parse_list( $row->kuvittaja ),
 		'suomentaja'     => parse_list( $row->suomentaja ),
@@ -125,16 +125,6 @@ function parse_list( $field ) {
 function get_import_data() {
 	$data = file_get_contents( IMPORT_FILE_PATH );
 
-	//$data = str_replace( '},{', "},\n{", $data );
-
-
-	//$data = str_replace( '​', '', $data );
-	//$data = str_replace( ' ', '', $data );
-	//$data = str_replace( '­', '', $data );
-
-	//$data = str_replace( "\n", '', $body );
-	//$data = str_replace( "\r", '', $data );
-
 	if ( ! empty( $data ) ) {
 		$parsed_data = json_decode( $data, null, 512, JSON_INVALID_UTF8_SUBSTITUTE );
 		if ( ! empty( $parsed_data ) && is_array( $parsed_data ) ) {
@@ -151,18 +141,37 @@ function get_import_data() {
  * @param int $max Maximum imported items per run.
  */
 function import_books( $max = 1 ) {
-	$nr   = 0;
-	$isbn = get_isbn_list();
-	foreach ( read_books() as $id => $book ) {
+	$imported = 0;
+	$skipped  = 0;
+	$failed   = 0;
+	$isbn     = get_isbn_list();
+	$books    = read_books();
+	foreach ( $books as $id => $book ) {
 		if ( ! in_array( $book['isbn'], $isbn, true ) ) {
-			if ( create_book_object( $book ) ) {
-				$nr ++;
+			$id = create_book_object( $book );
+			if ( $id ) {
+				echo "Imported: $book[title]<br/>\n";
+				$imported ++;
+			} elseif (is_null($id)) {
+				$skipped ++;
+			} else {
+				$failed ++;
 			}
+		} else {
+			$skipped ++;
 		}
-		if ( $nr >= $max ) {
+		if ( $imported >= $max ) {
 			break;
 		}
 	}
+	if ( $skipped ) {
+		echo "Skipped $skipped books<br/>";
+	}
+	if ( $failed ) {
+		echo "Failed to import $failed books<br/>";
+	}
+
+	return $imported;
 }
 
 

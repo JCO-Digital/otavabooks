@@ -19,6 +19,7 @@ function create_book_object( array $item, array $tags = [] ) {
 		'post_author'  => IMPORT_AUTHOR,
 	);
 
+	/*
 	$date = $item['dates']['ilmestymis'];
 	if ( ! empty( $item['dates']['embargo'] ) ) {
 		$date = $item['dates']['embargo'];
@@ -28,8 +29,9 @@ function create_book_object( array $item, array $tags = [] ) {
 	if ( ! empty( $date ) ) {
 		$new_book['post_date'] = $date . ' 00:00:00';
 	}
+	*/
 
-	if ( ! empty( $item['isbn'] ) && ! empty( $item['kuvittaja'] ) && ! empty( $item['suomentaja'] ) ) {
+	if ( ! empty( $item['isbn'] ) ) {
 		// Insert the post into the database.
 		$post_id = wp_insert_post( $new_book );
 		if ( ! empty( $post_id ) ) {
@@ -38,6 +40,8 @@ function create_book_object( array $item, array $tags = [] ) {
 			update_book_versions( $post_id, $item['versions'] );
 
 			return $post_id;
+		} else {
+			return false;
 		}
 	}
 

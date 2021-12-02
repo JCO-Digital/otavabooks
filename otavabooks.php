@@ -25,8 +25,8 @@ require_once 'utility.php';
 require_once 'otava-book.php';
 require_once 'author.php';
 
-//define( 'IMPORT_FILE_PATH', 'https://tuotetiedot.otava.fi/otava-kirjallisuus.json' );
-define('IMPORT_FILE_PATH', get_upload_dir() . '/fixed.json');
+define( 'IMPORT_FILE_PATH', 'https://otava.fi/tuotepainos.json' );
+//define('IMPORT_FILE_PATH', get_upload_dir() . '/tuotepainos.json');
 define('IMPORT_PUBLISHERS', ['', 'moreeni', 'f-kustannus', 'nemo']);
 define('IMPORT_POST_TYPE', 'otava_book');
 define('IMPORT_AUTHOR_TYPE', 'otava_author');

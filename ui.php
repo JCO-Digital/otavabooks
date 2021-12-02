@@ -5,7 +5,8 @@ namespace otavabooks;
 /**
  * Main function hooked to the tools menu.
  */
-function show_book_import_page() {
+function show_book_import_page()
+{
 	$books = read_books();
 
 	echo '
@@ -13,15 +14,17 @@ function show_book_import_page() {
             <a class="button action" href="?page=book-import&amp;fetchdata=1">Fetch Data</a>
         </p>';
 
-	if ( ! empty( $books ) ) {
-		echo "Books: " . count( $books );
+	if (!empty($books)) {
+		echo "Books: " . count($books);
 		echo '
         <p>
             <a class="button action" href="?page=book-import&amp;bookimport=1">Import Book</a>
+            <a class="button action" href="?page=book-import&amp;bookimport=10">Import 10 Books</a>
+            <a class="button action" href="?page=book-import&amp;bookimport=10&amp;reload=1">Import All Books</a>
         </p>';
 	}
 
-	if ( WP_DEBUG ) {
+	if (WP_DEBUG) {
 		echo '
         <p>
             <a class="button action" href="?page=book-import&amp;bookdelete=30">Delete all books (remove for production)</a>
@@ -34,29 +37,33 @@ function show_book_import_page() {
 	}
 
 	echo '<p>';
-	if ( is_admin() && ! empty( $_GET['fetchdata'] ) ) {
+	if (is_admin() && !empty($_GET['fetchdata'])) {
 
 		$books = make_book_list();
-		$json  = wp_json_encode( $books );
-		file_put_contents( IMPORT_BOOK_DATA, $json );
+		$json = wp_json_encode($books);
+		file_put_contents(IMPORT_BOOK_DATA, $json);
 	}
 
 	// Import Books.
-	if ( is_admin() && ! empty( $_GET['bookimport'] ) && ctype_digit( $_GET['bookimport'] ) ) {
-		echo import_books( wp_unslash( $_GET['bookimport'] ) );
+	if (is_admin() && !empty($_GET['bookimport']) && ctype_digit($_GET['bookimport'])) {
+		$imported = import_books($_GET['bookimport']);
+		if ($imported == $_GET['bookimport'] && !empty($_GET['reload'])) {
+			echo '<script type="text/javascript">window.location.reload();</script>';
+		}
+		echo "Imported $imported books.";
 	}
 
 	// Delete Books.
-	if ( is_admin() && ! empty( $_GET['bookdelete'] ) && ctype_digit( $_GET['bookdelete'] ) ) {
-		$deleted = delete_books( $_GET['bookdelete'] );
-		if ( $deleted == $_GET['bookdelete'] ) {
+	if (is_admin() && !empty($_GET['bookdelete']) && ctype_digit($_GET['bookdelete'])) {
+		$deleted = delete_books($_GET['bookdelete']);
+		if ($deleted == $_GET['bookdelete']) {
 			echo '<script type="text/javascript">window.location.reload();</script>';
 		}
 	}
 
 	// Clean up terms.
-	if ( is_admin() && ! empty( $_GET['termdelete'] ) && ctype_digit( $_GET['termdelete'] ) ) {
-		clean_terms( $_GET['termdelete'] );
+	if (is_admin() && !empty($_GET['termdelete']) && ctype_digit($_GET['termdelete'])) {
+		clean_terms($_GET['termdelete']);
 	}
 
 	echo '</p>';
