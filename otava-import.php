@@ -132,8 +132,11 @@ function parse_list( $field ) {
  * @return array|mixed|object
  */
 function get_import_data() {
-	$data = file_get_contents( get_import_url_setting() );
-
+	$data  = file_get_contents( get_import_url_setting() );
+	$start = strpos( $data, '[' );
+	if ( $start > 0 ) {
+		$data = substr( $data, $start );
+	}
 	if ( ! empty( $data ) ) {
 		$parsed_data = json_decode( $data, null, 512, JSON_INVALID_UTF8_SUBSTITUTE );
 		if ( ! empty( $parsed_data ) && is_array( $parsed_data ) ) {

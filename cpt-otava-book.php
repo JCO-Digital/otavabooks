@@ -70,7 +70,7 @@ function otava_book() {
 // Hook into the 'init' action.
 add_action( 'init', 'otavabooks\otava_book', 0 );
 
-// Register Custom Taxonomy: otava_toimittanut.
+// Register Custom Taxonomies.
 function otava_taxonomies() {
 	foreach (get_otava_taxonomies() as $taxo => $labels) {
 		$taxo_name = 'otava_' .$taxo;
