@@ -19,19 +19,22 @@ require_once 'vendor/autoload.php';
 
 require_once 'cpt-otava-book.php';
 require_once 'acf-fields.php';
+require_once 'acf-options.php';
 require_once 'ui.php';
 require_once 'otava-import.php';
 require_once 'utility.php';
 require_once 'otava-book.php';
 require_once 'author.php';
 
-define( 'IMPORT_FILE_PATH', 'https://otava.fi/tuotepainos.json' );
+define( 'IMPORT_FILE_PATH', get_import_url() );
 //define('IMPORT_FILE_PATH', get_upload_dir() . '/tuotepainos.json');
-define('IMPORT_PUBLISHERS', ['', 'moreeni', 'f-kustannus', 'nemo']);
+define('IMPORT_PUBLISHERS', get_publishers() );
 define('IMPORT_POST_TYPE', 'otava_book');
 define('IMPORT_AUTHOR_TYPE', 'otava_author');
-define('IMPORT_AUTHOR', 11);
+define('IMPORT_AUTHOR', get_author() );
 define('IMPORT_BOOK_DATA', get_upload_dir() . '/book_data.json');
+
+
 
 add_action('admin_menu', 'otavabooks\book_import_menu');
 
