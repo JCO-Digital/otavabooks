@@ -42,13 +42,11 @@ function get_upload_dir( $path = 'otavabooks' ) {
 	return $folder;
 }
 
-function read_books() {
-	$json = file_get_contents( IMPORT_BOOK_DATA );
-
-	return json_decode( $json, true );
-}
 
 function get_json( $filename ) {
+	if ( ! file_exists( $filename ) ) {
+		return array();
+	}
 	$json = file_get_contents( $filename );
 	$data = json_decode( $json, true );
 	if ( empty( $data ) ) {
@@ -56,4 +54,10 @@ function get_json( $filename ) {
 	}
 
 	return $data;
+}
+
+function put_json( $filename, $data ) {
+	$json = json_encode( $data );
+
+	return file_put_contents( $filename, $json );
 }

@@ -11,27 +11,16 @@ namespace otavabooks;
  * @return string Output to pass to the user.
  */
 function create_book_object( array $item, array $tags = [] ) {
-	$new_book = array(
-		'post_type'    => IMPORT_POST_TYPE,
-		'post_title'   => $item['title'],
-		'post_content' => $item['content'],
-		'post_status'  => 'publish',
-		'post_author'  => IMPORT_AUTHOR,
-	);
-
-	$date = $item['dates']['ilmestymis'];
-	if ( ! empty( $item['dates']['embargo'] ) ) {
-		$date = $item['dates']['embargo'];
-	} elseif ( ! empty( $item['dates']['yleiseenmyyntiin'] ) ) {
-		$date = $item['dates']['yleiseenmyyntiin'];
-	}
-	if ( ! empty( $date ) ) {
-		if ( strtotime( $date ) < time() ) {
-			$new_book['post_date'] = $date . ' 00:00:00';
-		}
-	}
-
 	if ( ! empty( $item['isbn'] ) ) {
+		$new_book = array(
+			'post_type'    => IMPORT_POST_TYPE,
+			'post_title'   => $item['title'],
+			'post_content' => $item['content'],
+			'post_status'  => 'publish',
+			'post_author'  => IMPORT_AUTHOR,
+		);
+		parse_dates($new_book, $item);
+
 		// Insert the post into the database.
 		$post_id = wp_insert_post( $new_book );
 		if ( ! empty( $post_id ) ) {
@@ -47,6 +36,39 @@ function create_book_object( array $item, array $tags = [] ) {
 
 	return null;
 }
+
+function update_book_object( int $id, array $item, array $tags = [] ) {
+	$update_book = array(
+		'ID'           => $id,
+		'post_title'   => $item['title'],
+		'post_content' => $item['content'],
+	);
+	parse_dates($update_book, $item);
+
+	$post_id     = wp_update_post( $update_book );
+	if ( ! empty( $post_id ) ) {
+		update_book_meta( $post_id, $item );
+		update_book_versions( $post_id, $item['versions'] );
+
+		return $post_id;
+	}
+	return false;
+}
+
+function parse_dates (&$post, $item) {
+	$date = $item['dates']['ilmestymis'];
+	if ( ! empty( $item['dates']['embargo'] ) ) {
+		$date = $item['dates']['embargo'];
+	} elseif ( ! empty( $item['dates']['yleiseenmyyntiin'] ) ) {
+		$date = $item['dates']['yleiseenmyyntiin'];
+	}
+	if ( ! empty( $date ) ) {
+		if ( strtotime( $date ) < time() ) {
+			$post['post_date'] = $date . ' 00:00:00';
+		}
+	}
+}
+
 
 /**
  * Update the meta values for the books.
@@ -97,7 +119,7 @@ function update_book_meta( $post_id, $item ) {
 		}
 	}
 	if ( ! empty( $item['sarja'] ) ) {
-		wp_set_post_terms( $post_id, [ $item['sarja'] ], 'otava_sarja', false );
+		wp_set_post_terms( $post_id, array( $item['sarja'] ), 'otava_sarja', false );
 		$tags[] = $item['sarja'];
 	}
 	$asu = array();
@@ -110,23 +132,16 @@ function update_book_meta( $post_id, $item ) {
 		wp_set_post_terms( $post_id, $asu, 'otava_sidosasu', false );
 	}
 	if ( ! empty( $item['tulosyksikko'] ) ) {
-		wp_set_post_terms( $post_id, [ $item['tulosyksikko'] ], 'otava_julkaisija', false );
+		wp_set_post_terms( $post_id, array( $item['tulosyksikko'] ), 'otava_julkaisija', false );
 		$tags[] = $item['tulosyksikko'];
 	}
 
-	$toimittanut = [];
-	if ( ! empty( $item['authors'] ) ) {
-		$toimittanut = match_authors( $post_id, $item['authors'], $tags );
+	$toimittaja = match_authors( $post_id, $item['authors'], $tags );
+	foreach ( $item['toimittaja'] as $name ) {
+		$toimittaja[] = parse_name( $name );
+		$tags[]        = parse_name( $name );
 	}
-	if ( ! empty( $item['toimittaja'] ) ) {
-		foreach ( $item['toimittaja'] as $name ) {
-			$toimittanut[] = parse_name( $name );
-			$tags[]        = parse_name( $name );
-		}
-	}
-	if ( ! empty( $toimittanut ) ) {
-		wp_set_post_terms( $post_id, $toimittanut, 'otava_toimittanut', false );
-	}
+	wp_set_post_terms( $post_id, $toimittaja, 'otava_toimittaja', false );
 	if ( ! empty( $tags ) ) {
 		wp_set_post_terms( $post_id, $tags, 'post_tag', false );
 	}

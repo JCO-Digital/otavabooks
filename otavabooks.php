@@ -27,25 +27,24 @@ require_once 'otava-book.php';
 require_once 'author.php';
 
 define( 'IMPORT_FILE_PATH', get_import_url() );
-//define('IMPORT_FILE_PATH', get_upload_dir() . '/tuotepainos.json');
-define('IMPORT_PUBLISHERS', get_publishers() );
-define('IMPORT_POST_TYPE', 'otava_book');
-define('IMPORT_AUTHOR_TYPE', 'otava_author');
-define('IMPORT_AUTHOR', get_author() );
-define('IMPORT_BOOK_DATA', get_upload_dir() . '/book_data.json');
+define( 'IMPORT_PUBLISHERS', get_publishers() );
+define( 'IMPORT_POST_TYPE', 'otava_book' );
+define( 'IMPORT_AUTHOR_TYPE', 'otava_author' );
+define( 'IMPORT_AUTHOR', get_author() );
+define( 'IMPORT_BOOK_DATA', get_upload_dir() . '/book_data.json' );
 
-add_action('admin_menu', 'otavabooks\book_import_menu');
+add_action( 'admin_menu', 'otavabooks\book_import_menu' );
 
 /**
  * Adds menu to WP Admin
  */
 function book_import_menu() {
 	$parent_slug = 'tools.php';
-	$page_title = 'Otava Kirjatuonti';
-	$menu_title = 'Tuo Kirjoja';
-	$capability = 'manage_options';
-	$menu_slug = 'book-import';
-	$function = 'otavabooks\show_book_import_page';
+	$page_title  = 'Otava Kirjatuonti';
+	$menu_title  = 'Tuo Kirjoja';
+	$capability  = 'manage_options';
+	$menu_slug   = 'book-import';
+	$function    = 'otavabooks\show_book_import_page';
 
 	add_submenu_page(
 		$parent_slug,

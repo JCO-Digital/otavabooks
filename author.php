@@ -12,6 +12,10 @@ namespace otavabooks;
  * @return array
  */
 function match_authors( int $post_id, array $authors, array &$tags = [] ) {
+	if ( empty( $authors ) ) {
+		return array();
+	}
+
 	if ( empty( $GLOBALS['author_list'] ) ) {
 		$GLOBALS['author_list'] = get_author_list();
 	}
@@ -37,7 +41,8 @@ function match_authors( int $post_id, array $authors, array &$tags = [] ) {
 			$linked[ $id ] = count( $names );
 			// Remove names from toimittanut.
 			foreach ( $names as $name ) {
-				if ( false !== $key = array_search( $name, $toimittanut, true ) ) {
+				$key = array_search( $name, $toimittanut, true );
+				if ( false !== $key ) {
 					unset( $toimittanut[ $key ] );
 				}
 			}
