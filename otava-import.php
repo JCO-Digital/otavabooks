@@ -12,10 +12,11 @@ use Nicebooks\Isbn\IsbnTools;
  * @return array
  */
 function make_book_list() {
-	$tools = new IsbnTools();
-	$data  = array();
+	$tools      = new IsbnTools();
+	$data       = array();
+	$publishers = get_publishers_setting();
 	foreach ( get_import_data() as $row ) {
-		if ( isset( $row->kantanumero ) && in_array( strtolower( $row->tulosyksikko ), IMPORT_PUBLISHERS, true ) && $tools->isValidIsbn( $row->isbn ) ) {
+		if ( isset( $row->kantanumero ) && in_array( strtolower( $row->tulosyksikko ), $publishers, true ) && $tools->isValidIsbn( $row->isbn ) ) {
 			try {
 				$isbn    = Isbn::of( $row->isbn );
 				$version = add_version( $isbn->to13()->format(), $row );
@@ -131,7 +132,7 @@ function parse_list( $field ) {
  * @return array|mixed|object
  */
 function get_import_data() {
-	$data = file_get_contents( IMPORT_FILE_PATH );
+	$data = file_get_contents( get_import_url_setting() );
 
 	if ( ! empty( $data ) ) {
 		$parsed_data = json_decode( $data, null, 512, JSON_INVALID_UTF8_SUBSTITUTE );

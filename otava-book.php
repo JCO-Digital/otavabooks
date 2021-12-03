@@ -17,7 +17,7 @@ function create_book_object( array $item, array $tags = [] ) {
 			'post_title'   => $item['title'],
 			'post_content' => $item['content'],
 			'post_status'  => 'publish',
-			'post_author'  => IMPORT_AUTHOR,
+			'post_author'  => get_author_setting(),
 		);
 		parse_dates($new_book, $item);
 

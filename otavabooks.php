@@ -26,11 +26,8 @@ require_once 'utility.php';
 require_once 'otava-book.php';
 require_once 'author.php';
 
-define( 'IMPORT_FILE_PATH', get_import_url_setting() );
-define( 'IMPORT_PUBLISHERS', get_publishers_setting() );
 define( 'IMPORT_POST_TYPE', 'otava_book' );
 define( 'IMPORT_AUTHOR_TYPE', 'otava_author' );
-define( 'IMPORT_AUTHOR', get_author_setting() );
 define( 'IMPORT_BOOK_DATA', get_upload_dir() . '/book_data.json' );
 
 add_action( 'admin_menu', 'otavabooks\book_import_menu' );

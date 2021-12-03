@@ -106,13 +106,15 @@ function activate_acf_options() {
 }
 
 function get_import_url_setting() {
-	return get_field( "otavabooks_import_url", "option" ) ?? "https://otava.fi/tuotepainos.json";
+	return get_field( 'otavabooks_import_url', 'option' ) ?? 'https://otava.fi/tuotepainos.json';
 }
 
 function get_publishers_setting() {
-	return get_field( "otavabooks_import_publishers", "option" ) ?? [];
+	$publishers = get_field( 'otavabooks_import_publishers', 'option' ) ?? array();
+
+	return str_replace( 'otava', '', $publishers );
 }
 
 function get_author_setting() {
-	return get_field( "otavabooks_import_author", "option" );
+	return get_field( 'otavabooks_import_author', 'option' );
 }
