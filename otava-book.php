@@ -97,7 +97,7 @@ function update_book_meta( $post_id, $item ) {
 		}
 	}
 	if ( ! empty( $item['sarja'] ) ) {
-		wp_set_post_terms( $post_id, [ $item['sarja'] ], 'otava_sarja', false );
+		wp_set_post_terms( $post_id, array( $item['sarja'] ), 'otava_sarja', false );
 		$tags[] = $item['sarja'];
 	}
 	$asu = array();
@@ -110,23 +110,16 @@ function update_book_meta( $post_id, $item ) {
 		wp_set_post_terms( $post_id, $asu, 'otava_sidosasu', false );
 	}
 	if ( ! empty( $item['tulosyksikko'] ) ) {
-		wp_set_post_terms( $post_id, [ $item['tulosyksikko'] ], 'otava_julkaisija', false );
+		wp_set_post_terms( $post_id, array( $item['tulosyksikko'] ), 'otava_julkaisija', false );
 		$tags[] = $item['tulosyksikko'];
 	}
 
-	$toimittanut = [];
-	if ( ! empty( $item['authors'] ) ) {
-		$toimittanut = match_authors( $post_id, $item['authors'], $tags );
+	$toimittaja = match_authors( $post_id, $item['authors'], $tags );
+	foreach ( $item['toimittaja'] as $name ) {
+		$toimittaja[] = parse_name( $name );
+		$tags[]        = parse_name( $name );
 	}
-	if ( ! empty( $item['toimittaja'] ) ) {
-		foreach ( $item['toimittaja'] as $name ) {
-			$toimittanut[] = parse_name( $name );
-			$tags[]        = parse_name( $name );
-		}
-	}
-	if ( ! empty( $toimittanut ) ) {
-		wp_set_post_terms( $post_id, $toimittanut, 'otava_toimittanut', false );
-	}
+	wp_set_post_terms( $post_id, $toimittaja, 'otava_toimittaja', false );
 	if ( ! empty( $tags ) ) {
 		wp_set_post_terms( $post_id, $tags, 'post_tag', false );
 	}
