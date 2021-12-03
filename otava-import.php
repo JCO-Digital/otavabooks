@@ -32,7 +32,7 @@ function make_book_list() {
 						);
 
 					// Create the book object.
-					$book = add_book( $row, $isbn->format(), $placeholder['versions'], $placeholder['timestamp'] );
+					$book = add_book( $row, $isbn->to13()->format(), $placeholder['versions'], $placeholder['timestamp'] );
 				} else {
 					// If not master, check if record exist, record can be product or placeholder.
 					$book = $data[ $id ] ?? array(
@@ -83,7 +83,7 @@ function add_book( $row, $isbn, $versions = array(), $timestamp = 0 ) {
 		'title'          => wp_strip_all_tags( $row->onix_tuotenimi ),
 		'sub_title'      => wp_strip_all_tags( $row->alaotsikko ),
 		'content'        => $row->markkinointiteksti,
-		'ilmestymis'     => substr( $row->ilmestymis_vvvvkk, 4 ) . '/' . substr( $row->ilmestymis_vvvvkk, 0, 4 ),
+		'ilmestymis'     => substr( $row->ilmestymis_vvvvkk, 0, 4 ) . '/' . substr( $row->ilmestymis_vvvvkk, 4 ) . '-01',
 		'authors'        => parse_list( $row->kirjantekija ),
 		'kuvittaja'      => parse_list( $row->kuvittaja ),
 		'suomentaja'     => parse_list( $row->suomentaja ),
