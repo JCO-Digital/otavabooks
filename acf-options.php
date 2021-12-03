@@ -1,24 +1,25 @@
 <?php
 
 add_action( 'acf/init', 'activate_acf_options' );
-function activate_acf_options() {
+function activate_acf_options()
+{
 
 	// Check function exists.
-	if ( function_exists( 'acf_add_options_page' ) ) {
+	if (function_exists('acf_add_options_page')) {
 
 		// Register options page.
 		$option_page = acf_add_options_sub_page(
 			array(
-				'page_title'    => __('Kirjatuojan asetukset'),
-				'menu_title'    => __('Kirjatuojan asetukset'),
-				'menu_slug'     => 'book-importer-settings',
-				'capability'    => 'edit_posts',
-				'parent_slug'   => 'options-general.php'
+				'page_title' => __('Kirjatuojan asetukset'),
+				'menu_title' => __('Kirjatuojan asetukset'),
+				'menu_slug' => 'book-importer-settings',
+				'capability' => 'edit_posts',
+				'parent_slug' => 'options-general.php'
 			)
 		);
 	}
 
-	if ( function_exists('acf_add_local_field_group') ) {
+	if ( function_exists( 'acf_add_local_field_group' ) ) {
 
 		acf_add_local_field_group(array(
 			'key' => 'group_61a9f26766957',
@@ -65,7 +66,7 @@ function activate_acf_options() {
 					'key' => 'field_61a9f2e248cda',
 					'label' => 'Import Author',
 					'name' => 'otavabooks_import_author',
-					'type' => 'text',
+					'type' => 'number',
 					'instructions' => '',
 					'required' => 0,
 					'conditional_logic' => 0,
@@ -78,7 +79,9 @@ function activate_acf_options() {
 					'placeholder' => '',
 					'prepend' => '',
 					'append' => '',
-					'maxlength' => '',
+					'min' => '',
+					'max' => '',
+					'step' => '',
 				),
 			),
 			'location' => array(
@@ -112,5 +115,5 @@ function get_publishers() {
 }
 
 function get_author() {
-	return (int)get_field("otavabooks_import_author", "option");
+	return get_field("otavabooks_import_author", "option");
 }

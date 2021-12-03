@@ -34,8 +34,6 @@ define('IMPORT_AUTHOR_TYPE', 'otava_author');
 define('IMPORT_AUTHOR', get_author() );
 define('IMPORT_BOOK_DATA', get_upload_dir() . '/book_data.json');
 
-
-
 add_action('admin_menu', 'otavabooks\book_import_menu');
 
 /**
