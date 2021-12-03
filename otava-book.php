@@ -11,27 +11,16 @@ namespace otavabooks;
  * @return string Output to pass to the user.
  */
 function create_book_object( array $item, array $tags = [] ) {
-	$new_book = array(
-		'post_type'    => IMPORT_POST_TYPE,
-		'post_title'   => $item['title'],
-		'post_content' => $item['content'],
-		'post_status'  => 'publish',
-		'post_author'  => IMPORT_AUTHOR,
-	);
-
-	$date = $item['dates']['ilmestymis'];
-	if ( ! empty( $item['dates']['embargo'] ) ) {
-		$date = $item['dates']['embargo'];
-	} elseif ( ! empty( $item['dates']['yleiseenmyyntiin'] ) ) {
-		$date = $item['dates']['yleiseenmyyntiin'];
-	}
-	if ( ! empty( $date ) ) {
-		if ( strtotime( $date ) < time() ) {
-			$new_book['post_date'] = $date . ' 00:00:00';
-		}
-	}
-
 	if ( ! empty( $item['isbn'] ) ) {
+		$new_book = array(
+			'post_type'    => IMPORT_POST_TYPE,
+			'post_title'   => $item['title'],
+			'post_content' => $item['content'],
+			'post_status'  => 'publish',
+			'post_author'  => IMPORT_AUTHOR,
+		);
+		parse_dates($new_book, $item);
+
 		// Insert the post into the database.
 		$post_id = wp_insert_post( $new_book );
 		if ( ! empty( $post_id ) ) {
@@ -47,6 +36,39 @@ function create_book_object( array $item, array $tags = [] ) {
 
 	return null;
 }
+
+function update_book_object( int $id, array $item, array $tags = [] ) {
+	$update_book = array(
+		'ID'           => $id,
+		'post_title'   => $item['title'],
+		'post_content' => $item['content'],
+	);
+	parse_dates($update_book, $item);
+
+	$post_id     = wp_update_post( $update_book );
+	if ( ! empty( $post_id ) ) {
+		update_book_meta( $post_id, $item );
+		update_book_versions( $post_id, $item['versions'] );
+
+		return $post_id;
+	}
+	return false;
+}
+
+function parse_dates (&$post, $item) {
+	$date = $item['dates']['ilmestymis'];
+	if ( ! empty( $item['dates']['embargo'] ) ) {
+		$date = $item['dates']['embargo'];
+	} elseif ( ! empty( $item['dates']['yleiseenmyyntiin'] ) ) {
+		$date = $item['dates']['yleiseenmyyntiin'];
+	}
+	if ( ! empty( $date ) ) {
+		if ( strtotime( $date ) < time() ) {
+			$post['post_date'] = $date . ' 00:00:00';
+		}
+	}
+}
+
 
 /**
  * Update the meta values for the books.
