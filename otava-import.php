@@ -19,7 +19,7 @@ function make_book_list() {
 		if ( isset( $row->kantanumero ) && in_array( strtolower( $row->tulosyksikko ), $publishers, true ) && $tools->isValidIsbn( $row->isbn ) ) {
 			try {
 				$isbn    = Isbn::of( $row->isbn );
-				$version = add_version( $isbn->to13()->format(), $row );
+				$version = add_version( $isbn->format(), $row );
 				$master  = 'Kyllä' === $row->master_tuote;
 				$id      = $row->kantanumero;
 				if ( $master ) {
@@ -32,7 +32,7 @@ function make_book_list() {
 						);
 
 					// Create the book object.
-					$book = add_book( $row, $isbn->to13()->format(), $placeholder['versions'], $placeholder['timestamp'] );
+					$book = add_book( $row, $isbn->format(), $placeholder['versions'], $placeholder['timestamp'] );
 				} else {
 					// If not master, check if record exist, record can be product or placeholder.
 					$book = $data[ $id ] ?? array(

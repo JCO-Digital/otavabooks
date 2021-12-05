@@ -30,6 +30,7 @@ define( 'IMPORT_POST_TYPE', 'otava_book' );
 define( 'IMPORT_AUTHOR_TYPE', 'otava_author' );
 define( 'IMPORT_BOOK_DATA', get_upload_dir() . '/book_data.json' );
 define( 'IMPORT_TIMESTAMP_DATA', get_upload_dir() . '/timestamp_data.json' );
+define( 'BOOK_COVER_DATA', get_upload_dir() . '/cover_data.json' );
 
 add_action( 'admin_menu', 'otavabooks\book_import_menu' );
 

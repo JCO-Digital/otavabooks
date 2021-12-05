@@ -61,3 +61,30 @@ function put_json( $filename, $data ) {
 
 	return file_put_contents( $filename, $json );
 }
+
+function check_for_cover( $isbn ) {
+	if ( empty( $GLOBALS['book_covers'] ) ) {
+		$GLOBALS['book_covers'] = get_json( BOOK_COVER_DATA );
+	}
+	if ( isset( $GLOBALS['book_covers'][ $isbn ] ) ) {
+		if ( $GLOBALS['book_covers'][ $isbn ]['has_cover'] ) {
+			// Book has cover.
+			return true;
+		} elseif ( $GLOBALS['book_covers'][ $isbn ]['timestamp'] > time() - 60 * 60 * 48 ) {
+			// Book doesn't have cover, but is checked in the last two days.
+			return false;
+		}
+	}
+	// Check for Cover.
+	$url       = 'https://mediapankki.otava.fi/api/v1/assets/by-isbn/' . $isbn . '.jpg';
+	$headers   = get_headers( $url, 1 );
+	$has_cover = ( strpos( $headers[0], '200 OK' ) !== false );
+
+	$GLOBALS['book_covers'][ $isbn ] = array(
+		'has_cover' => $has_cover,
+		'timestamp' => time(),
+	);
+	put_json( BOOK_COVER_DATA, $GLOBALS['book_covers'] );
+
+	return $has_cover;
+}
