@@ -18,6 +18,7 @@ namespace otavabooks;
 require_once 'vendor/autoload.php';
 
 require_once 'cpt-otava-book.php';
+require_once 'cpt-otava-author.php';
 require_once 'acf-fields.php';
 require_once 'acf-options.php';
 require_once 'ui.php';
