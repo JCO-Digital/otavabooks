@@ -82,6 +82,25 @@ function activate_acf_options() {
 					'max'               => '',
 					'step'              => '',
 				),
+				array(
+					'key' => 'field_61af3dd588ec9',
+					'label' => 'Disable category conversion',
+					'name' => 'otavabooks_disable_category_conversion',
+					'type' => 'true_false',
+					'instructions' => '',
+					'required' => 0,
+					'conditional_logic' => 0,
+					'wrapper' => array(
+						'width' => '',
+						'class' => '',
+						'id' => '',
+					),
+					'message' => '',
+					'default_value' => 0,
+					'ui' => 1,
+					'ui_on_text' => '',
+					'ui_off_text' => '',
+				),
 			),
 			'location'              => array(
 				array(
@@ -105,6 +124,9 @@ function activate_acf_options() {
 	}
 }
 
+/**
+ * Getters for the different settings values.
+ */
 function get_import_url_setting() {
 	return get_field( 'otavabooks_import_url', 'option' ) ?? 'https://otava.fi/tuotepainos.json';
 }
@@ -117,4 +139,8 @@ function get_publishers_setting() {
 
 function get_author_setting() {
 	return get_field( 'otavabooks_import_author', 'option' );
+}
+
+function get_disable_categories_setting() {
+	return (bool)get_field( 'otavabooks_disable_category_conversion', 'option' );
 }

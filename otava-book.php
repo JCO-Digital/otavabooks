@@ -183,6 +183,9 @@ function get_books() {
 
 $categories = get_json( __DIR__ . '/categories.json' );
 function get_otava_cat( $raw, $default = 'Muut' ) {
+	if (get_disable_categories_setting()) {
+		return $raw;
+	}
 	global $categories;
 	$orig     = trim( $raw );
 	$category = $default;
