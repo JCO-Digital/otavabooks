@@ -83,7 +83,7 @@ function add_book( $row, $isbn, $versions = array(), $timestamp = 0 ) {
 		'title'          => wp_strip_all_tags( $row->onix_tuotenimi ),
 		'sub_title'      => wp_strip_all_tags( $row->alaotsikko ),
 		'content'        => $row->markkinointiteksti,
-		'ilmestymis'     => substr( $row->ilmestymis_vvvvkk, 0, 4 ) . '/' . substr( $row->ilmestymis_vvvvkk, 4 ) . '-01',
+		'ilmestymis'     => $row->ilmestymis_vvvvkk . '01',
 		'authors'        => parse_list( $row->kirjantekija ),
 		'kuvittaja'      => parse_list( $row->kuvittaja ),
 		'suomentaja'     => parse_list( $row->suomentaja ),

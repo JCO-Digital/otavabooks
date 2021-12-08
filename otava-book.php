@@ -19,7 +19,7 @@ function create_book_object( array $item, array $tags = [] ) {
 			'post_status'  => 'publish',
 			'post_author'  => get_author_setting(),
 		);
-		parse_dates($new_book, $item);
+		parse_dates( $new_book, $item );
 
 		// Insert the post into the database.
 		$post_id = wp_insert_post( $new_book );
@@ -43,19 +43,20 @@ function update_book_object( int $id, array $item, array $tags = [] ) {
 		'post_title'   => $item['title'],
 		'post_content' => $item['content'],
 	);
-	parse_dates($update_book, $item);
+	parse_dates( $update_book, $item );
 
-	$post_id     = wp_update_post( $update_book );
+	$post_id = wp_update_post( $update_book );
 	if ( ! empty( $post_id ) ) {
 		update_book_meta( $post_id, $item );
 		update_book_versions( $post_id, $item['versions'] );
 
 		return $post_id;
 	}
+
 	return false;
 }
 
-function parse_dates (&$post, $item) {
+function parse_dates( &$post, $item ) {
 	$date = $item['dates']['ilmestymis'];
 	if ( ! empty( $item['dates']['embargo'] ) ) {
 		$date = $item['dates']['embargo'];
@@ -139,7 +140,7 @@ function update_book_meta( $post_id, $item ) {
 	$toimittaja = match_authors( $post_id, $item['authors'], $tags );
 	foreach ( $item['toimittaja'] as $name ) {
 		$toimittaja[] = parse_name( $name );
-		$tags[]        = parse_name( $name );
+		$tags[]       = parse_name( $name );
 	}
 	wp_set_post_terms( $post_id, $toimittaja, 'otava_toimittaja', false );
 	if ( ! empty( $tags ) ) {
@@ -157,6 +158,7 @@ function update_book_meta( $post_id, $item ) {
  * @param $versions - The json data from the import.
  */
 function update_book_versions( $post_id, $versions ) {
+	delete_field( 'versions', $post_id );
 	foreach ( $versions as $version ) {
 		add_row( 'versions', $version, $post_id );
 	}
@@ -183,7 +185,7 @@ function get_books() {
 
 $categories = get_json( __DIR__ . '/categories.json' );
 function get_otava_cat( $raw, $default = 'Muut' ) {
-	if (get_disable_categories_setting()) {
+	if ( get_disable_categories_setting() ) {
 		return $raw;
 	}
 	global $categories;
