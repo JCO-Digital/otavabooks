@@ -149,6 +149,9 @@ function update_book_meta( $post_id, $item ) {
 	if ( ! empty( $categories ) ) {
 		wp_set_post_terms( $post_id, $categories, 'otava_kategoria', false );
 	}
+	if ( ! empty( $item['kausi'] ) && get_import_catalog() ) {
+		wp_set_post_terms( $post_id, $item['kausi'], 'otava_katalogi', false );
+	}
 }
 
 /**

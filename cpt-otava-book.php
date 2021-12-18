@@ -99,7 +99,7 @@ add_action( 'init', 'otavabooks\otava_taxonomies', 0 );
 
 
 function get_otava_taxonomies() {
-	return array(
+	$taxonomies = array(
 		'toimittaja' => array(
 			'name'                       => _x( 'Toimittanut', 'Taxonomy General Name', 'text_domain' ),
 			'singular_name'              => _x( 'Toimittanut', 'Taxonomy Singular Name', 'text_domain' ),
@@ -213,4 +213,25 @@ function get_otava_taxonomies() {
 			'choose_from_most_used'      => __( 'Valitse eniten käytetyistä teoskategorioista', 'text_domain' ),
 		),
 	);
+
+	if ( get_import_catalog() ) {
+		$taxonomies['katalogi'] = array(
+			'name'                       => _x( 'Katalogi', 'Taxonomy General Name', 'text_domain' ),
+			'singular_name'              => _x( 'Katalogi', 'Taxonomy Singular Name', 'text_domain' ),
+			'menu_name'                  => __( 'Katalogi', 'text_domain' ),
+			'all_items'                  => __( 'Kaikki katalogit', 'text_domain' ),
+			'parent_item'                => __( 'Parent Publisher', 'text_domain' ),
+			'parent_item_colon'          => __( 'Parent Publisher:', 'text_domain' ),
+			'new_item_name'              => __( 'Uuden katalogin nimi', 'text_domain' ),
+			'add_new_item'               => __( 'Lisää uusi katalogi', 'text_domain' ),
+			'edit_item'                  => __( 'Muokkaa katalogia', 'text_domain' ),
+			'update_item'                => __( 'Päivitä katalogin nimi', 'text_domain' ),
+			'separate_items_with_commas' => __( 'Erottele katalogit toisistaan pilkulla', 'text_domain' ),
+			'search_items'               => __( 'Etsi katalogeista', 'text_domain' ),
+			'add_or_remove_items'        => __( 'Lisää tai poista katalogeja', 'text_domain' ),
+			'choose_from_most_used'      => __( 'Valitse eniten käytetyistä katalogeista', 'text_domain' ),
+		);
+	}
+
+	return $taxonomies;
 }
