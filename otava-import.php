@@ -18,33 +18,30 @@ function make_book_list() {
 	foreach ( get_import_data() as $row ) {
 		if ( isset( $row->kantanumero ) && in_array( strtolower( $row->tulosyksikko ), $publishers, true ) && $tools->isValidIsbn( $row->isbn ) ) {
 			try {
-				$isbn    = Isbn::of( $row->isbn );
-				$version = add_version( $isbn->format(), $row );
-				$master  = 'Kyllä' === $row->master_tuote;
-				$id      = $row->kantanumero;
+				$isbn   = Isbn::of( $row->isbn );
+				$master = 'Kyllä' === $row->master_tuote;
+				$id     = $row->kantanumero;
+				// Get the book, or create an empty object if not exists.
+				$book = $data[ $id ] ?? array(
+						'categories' => array(),
+						'versions'   => array(),
+						'timestamp'  => 0,
+					);
+
 				if ( $master ) {
-					// If product is master.
-
-					// Get the old placeholder, or create an empty object.
-					$placeholder = $data[ $id ] ?? array(
-							'versions'  => array(),
-							'timestamp' => 0,
-						);
-
-					// Create the book object.
-					$book = add_book( $row, $isbn->format(), $placeholder['versions'], $placeholder['timestamp'] );
+					// If product is master, create the real book object.
+					$book = add_book( $row, $isbn->format(), $book['categories'], $book['versions'], $book['timestamp'] );
 				} else {
-					// If not master, check if record exist, record can be product or placeholder.
-					$book = $data[ $id ] ?? array(
-							'versions'  => array(),
-							'timestamp' => $row->muutosaikaleima,
-						);
+					// If not master, check if timestamp needs to be updated.
 					if ( $row->muutosaikaleima > $book['timestamp'] ) {
 						$book['timestamp'] = $row->muutosaikaleima;
 					}
 				}
+
 				// Push current product onto version stack.
-				array_push( $book['versions'], $version );
+				array_push( $book['categories'], get_otava_cat( $row->tuoteryhma ) );
+				// Push current product onto version stack.
+				array_push( $book['versions'], add_version( $isbn->format(), $row ) );
 				// Write/overwrite book into array.
 				$data[ $id ] = $book;
 			} catch ( InvalidIsbnException $exception ) {
@@ -75,7 +72,7 @@ function add_version( $isbn, $row ) {
 	);
 }
 
-function add_book( $row, $isbn, $versions = array(), $timestamp = 0 ) {
+function add_book( $row, $isbn, $categories = array(), $versions = array(), $timestamp = 0 ) {
 	$thema = array();
 
 	return array(
@@ -88,7 +85,7 @@ function add_book( $row, $isbn, $versions = array(), $timestamp = 0 ) {
 		'kuvittaja'      => parse_list( $row->kuvittaja ),
 		'suomentaja'     => parse_list( $row->suomentaja ),
 		'toimittaja'     => parse_list( $row->toimittaja ),
-		'tuoteryhma'     => array( trim( $row->tuoteryhma ) ),
+		'categories'      => $categories,
 		'tulosyksikko'   => $row->tulosyksikko ?? 'otava',
 		'alkuteos'       => $row->alkuteos,
 		'kirjastoluokka' => $row->kirjastoluokka,
