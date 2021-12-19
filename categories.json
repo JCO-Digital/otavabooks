@@ -9,7 +9,8 @@
     "Äänikirjat, ulkom. kaunokirjallisuus",
     "Äänikirjat, kotim. kaunok.",
     "Äänikirjat, lasten ja nuorten kirjat",
-    "Äänikirjat, erikoiskirjat"
+    "Äänikirjat, erikoiskirjat",
+    "Äänikirjat kaunokirjat, Like"
   ],
   "Kaunokirjat": [
     "Romaanit, kotimaiset",
@@ -66,7 +67,9 @@
     "Miki, kotim. kaunok.",
     "Miki, lasten ja nuorten kirjat",
     "Miki, yleiset tietokirjat",
-    "Miki, käytännön tietokirjat"
+    "Miki, käytännön tietokirjat",
+    "Like-pokkarit, kaunok.",
+    "Like-pokkarit, tietok."
   ],
   "Sähkökirjat": [
     "Sähköiset kustannustuotteet",
@@ -81,7 +84,8 @@
     "Sähkökirjat, käytännöntietokirjat"
   ],
   "Sarjakuvat": [
-    "Sarjakuvat"
+    "Sarjakuvat",
+    "Sarjakuvat, Like"
   ],
   "Tietokirjat": [
     "Yleiset tietokirjat, kotim.",
@@ -106,5 +110,31 @@
     "Moreeni, tuotteet",
     "Nemo, aikuisten kirjat",
     "Nopia"
+  ],
+  "Kotimainen kaunokirjallisuus": [
+    "Kotimainen kaunok. Like"
+  ],
+  "Suomennettu kaunokirjallisuus": [
+    "Suomennettu kaunok. Like"
+  ],
+  "Jännitys": [
+    "Jännitys, Like"
+  ],
+  "Scifi & fantasia": [
+    "Spefi, Like"
+  ],
+  "Yleiset tietokirjat": [
+    "Sähkökirjat tietokirjat, Like",
+    "Kotimaiset yleiset tietokirjat, Like",
+    "Like-pokkarit, tietok.",
+    "Suomennetut yleiset tietokirjat, Like"
+  ],
+  "Elämäkerrat": [],
+  "Musiikki ja populaarikulttuuri": [
+    "Musiikki ja populäärikulttuuri, Like"
+  ],
+  "E-kirjat": [
+    "Sähkökirjat kaunokirjat, Like",
+    "Sähkökirjat tietokirjat, Like"
   ]
 }
