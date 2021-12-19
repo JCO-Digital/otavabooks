@@ -82,9 +82,8 @@ function update_book_meta( $post_id, $item ) {
 	$tags       = array();
 	$categories = array();
 
-	if ( ! empty( $item['tuoteryhma'] ) ) {
-		foreach ( $item['tuoteryhma'] as $tuoteryhma ) {
-			$category     = get_otava_cat( $tuoteryhma );
+	if ( ! empty( $item['categories'] ) ) {
+		foreach ( $item['categories'] as $category ) {
 			$categories[] = $category;
 			$tags[]       = $category;
 		}
