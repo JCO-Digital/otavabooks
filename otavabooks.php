@@ -26,6 +26,7 @@ require_once 'otava-import.php';
 require_once 'utility.php';
 require_once 'otava-book.php';
 require_once 'author.php';
+require_once 'rest-api.php';
 
 define( 'IMPORT_POST_TYPE', 'otava_book' );
 define( 'IMPORT_AUTHOR_TYPE', 'otava_author' );
