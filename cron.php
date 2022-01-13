@@ -2,9 +2,6 @@
 
 namespace otavabooks;
 
-register_activation_hook( __FILE__, 'otavabooks\import_activation' );
-register_deactivation_hook( __FILE__, 'otavabooks\import_deactivation' );
-
 /**
  * Activate the WP cron hook.
  */
