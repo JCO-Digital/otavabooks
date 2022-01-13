@@ -6,16 +6,17 @@ namespace otavabooks;
  * Main function hooked to the tools menu.
  */
 function show_book_import_page() {
-	$books = get_json( IMPORT_BOOK_DATA );
+	$books     = get_json( IMPORT_BOOK_DATA );
+	$timestamp = file_exists( IMPORT_BOOK_DATA ) ? filemtime( IMPORT_BOOK_DATA ) : 0;
 
 	$update_page = false;
 
 	echo '<p>';
 	if ( is_admin() && ! empty( $_GET['fetchdata'] ) ) {
-
 		$books = make_book_list();
 		$json  = wp_json_encode( $books );
 		file_put_contents( IMPORT_BOOK_DATA, $json );
+		$timestamp = time();
 	}
 
 	// Import Books.
@@ -38,7 +39,7 @@ function show_book_import_page() {
 
 	// Reset Timestamps.
 	if ( is_admin() && ! empty( $_GET['resetupdate'] ) && ctype_digit( $_GET['resetupdate'] ) ) {
-		unlink(IMPORT_TIMESTAMP_DATA);
+		unlink( IMPORT_TIMESTAMP_DATA );
 	}
 
 
@@ -55,6 +56,11 @@ function show_book_import_page() {
 		clean_terms( $_GET['termdelete'] );
 	}
 
+	// Run import cron.
+	if ( is_admin() && ! empty( $_GET['runcron'] ) && ctype_digit( $_GET['runcron'] ) ) {
+		book_import_cron();
+	}
+
 	echo '</p>';
 
 	echo '
@@ -63,7 +69,8 @@ function show_book_import_page() {
         </p>';
 
 	if ( ! empty( $books ) ) {
-		echo "Books: " . count( $books );
+		echo "Books: " . count( $books ) . "<br/>";
+		echo "Imported at " . date( 'Y-m-d H:i:s', $timestamp ) . "<br/>";
 		echo '
         <p>
             <a class="button action" href="?page=book-import&amp;bookimport=1">Import Book</a>
@@ -91,6 +98,11 @@ function show_book_import_page() {
 		echo '
         <p>
             <a class="button action" href="?page=book-import&amp;termdelete=30">Delete unused terms (remove for production)</a>
+        </p>';
+
+		echo '
+        <p>
+            <a class="button action" href="?page=book-import&amp;runcron=1">Run Import cron</a>
         </p>';
 	}
 
