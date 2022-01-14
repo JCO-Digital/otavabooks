@@ -78,3 +78,16 @@ function check_for_cover( $isbn ) {
 
 	return null;
 }
+
+function redirect_books() {
+	global $wp;
+	if ( preg_match( '|(kirjat)/([^/]+)-([0-9]+)|', $wp->request, $matches ) ) {
+		$page = get_page_by_path( $matches[2], OBJECT, 'otava_book' );
+		if ( ! empty( $page ) ) {
+			$url = get_permalink( $page->ID );
+			if ( !empty($url) && wp_redirect( $url ) ) {
+				exit;
+			}
+		}
+	}
+}

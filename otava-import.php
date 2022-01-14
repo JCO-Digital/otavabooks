@@ -85,7 +85,7 @@ function add_book( $row, $isbn, $categories = array(), $versions = array(), $tim
 		'kuvittaja'      => parse_list( $row->kuvittaja ),
 		'suomentaja'     => parse_list( $row->suomentaja ),
 		'toimittaja'     => parse_list( $row->toimittaja ),
-		'categories'      => $categories,
+		'categories'     => $categories,
 		'tulosyksikko'   => $row->tulosyksikko ?? 'otava',
 		'alkuteos'       => $row->alkuteos,
 		'kirjastoluokka' => $row->kirjastoluokka,
@@ -135,6 +135,10 @@ function get_import_data() {
 		$data = substr( $data, $start );
 	}
 	if ( ! empty( $data ) ) {
+		// Replace extra backslashes from newlines.
+		//$data        = str_replace( '\\\\n', '\\n', $data );
+
+		// Parse JSON.
 		$parsed_data = json_decode( $data, null, 512, JSON_INVALID_UTF8_SUBSTITUTE );
 		if ( ! empty( $parsed_data ) && is_array( $parsed_data ) ) {
 			return $parsed_data;
