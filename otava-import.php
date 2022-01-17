@@ -135,8 +135,8 @@ function get_import_data() {
 		$data = substr( $data, $start );
 	}
 	if ( ! empty( $data ) ) {
-		// Replace extra backslashes from newlines.
-		//$data        = str_replace( '\\\\n', '\\n', $data );
+		// Replace ¤¤¤¤¤ with newlines.
+		$data = str_replace( '¤¤¤¤¤', '\\n', $data );
 
 		// Parse JSON.
 		$parsed_data = json_decode( $data, null, 512, JSON_INVALID_UTF8_SUBSTITUTE );
