@@ -119,6 +119,9 @@ function update_book_meta( $post_id, $item ) {
 		}
 	}
 	if ( ! empty( $item['sarja'] ) ) {
+		if ( is_array( $item['sarja'] ) ) {
+			$item['sarja'] = $item['sarja'][0];
+		}
 		wp_set_post_terms( $post_id, array( $item['sarja'] ), 'otava_sarja', false );
 		$tags[] = $item['sarja'];
 	}
