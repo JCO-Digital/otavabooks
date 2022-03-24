@@ -61,6 +61,11 @@ function show_book_import_page() {
 		book_import_cron();
 	}
 
+	// Run import cron.
+	if ( is_admin() && ! empty( $_GET['runcovercron'] ) && ctype_digit( $_GET['runcovercron'] ) ) {
+		cover_check_cron();
+	}
+
 	echo '</p>';
 
 	echo '
@@ -103,6 +108,11 @@ function show_book_import_page() {
 		echo '
         <p>
             <a class="button action" href="?page=book-import&amp;runcron=1">Run Import cron</a>
+        </p>';
+
+		echo '
+        <p>
+            <a class="button action" href="?page=book-import&amp;runcovercron=1">Run cover checking cron</a>
         </p>';
 	}
 

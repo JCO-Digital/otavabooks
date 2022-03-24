@@ -24,6 +24,7 @@ define( 'IMPORT_BOOK_DATA', get_upload_dir() . '/book_data.json' );
 define( 'IMPORT_TIMESTAMP_DATA', get_upload_dir() . '/timestamp_data.json' );
 define( 'BOOK_COVER_DATA', get_upload_dir() . '/cover_data.json' );
 define( 'IMPORT_TASK', 'otavabooks_import_cron_task' );
+define( 'COVER_TASK', 'otavabooks_check_cover_task' );
 
 require_once 'cpt-otava-book.php';
 require_once 'cpt-otava-author.php';
@@ -36,7 +37,7 @@ require_once 'author.php';
 require_once 'rest-api.php';
 require_once 'cron.php';
 
-register_activation_hook( __FILE__, 'otavabooks\import_activation' );
+add_action( 'init', 'otavabooks\import_activation' );
 register_deactivation_hook( __FILE__, 'otavabooks\import_deactivation' );
 
 add_action( 'admin_menu', 'otavabooks\book_import_menu' );
