@@ -1,6 +1,7 @@
 <?php
 
 add_action( 'acf/init', 'activate_acf_options' );
+
 function activate_acf_options() {
 
 	// Check function exists.
@@ -139,7 +140,6 @@ function activate_acf_options() {
 			'active'                => true,
 			'description'           => '',
 		) );
-
 	}
 }
 
@@ -147,23 +147,38 @@ function activate_acf_options() {
  * Getters for the different settings values.
  */
 function get_import_url_setting() {
-	return get_field( 'otavabooks_import_url', 'option' ) ?? 'https://otava.fi/tuotepainos.json';
+	if ( function_exists( 'get_field' ) ) {
+		return get_field( 'otavabooks_import_url', 'option' ) ?? 'https://otava.fi/tuotepainos.json';
+	}
+	return 'https://otava.fi/tuotepainos.json';
 }
 
 function get_publishers_setting() {
-	$publishers = get_field( 'otavabooks_import_publishers', 'option' ) ?? array();
+	if ( function_exists( 'get_field' ) ) {
+		$publishers = get_field( 'otavabooks_import_publishers', 'option' ) ?? array();
 
-	return str_replace( 'otava', '', $publishers );
+		return str_replace( 'otava', '', $publishers );
+	}
+	return array();
 }
 
 function get_author_setting() {
-	return get_field( 'otavabooks_import_author', 'option' );
+	if ( function_exists( 'get_field' ) ) {
+		return get_field( 'otavabooks_import_author', 'option' );
+	}
+	return 0;
 }
 
 function get_disable_categories_setting() {
-	return (bool)get_field( 'otavabooks_disable_category_conversion', 'option' );
+	if ( function_exists( 'get_field' ) ) {
+		return (bool) get_field( 'otavabooks_disable_category_conversion', 'option' );
+	}
+	return false;
 }
 
 function get_import_catalog() {
-	return (bool)get_field( 'otavabooks_import_catalog', 'option' );
+	if ( function_exists( 'get_field' ) ) {
+		return (bool) get_field( 'otavabooks_import_catalog', 'option' );
+	}
+	return false;
 }
