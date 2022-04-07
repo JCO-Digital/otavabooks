@@ -92,23 +92,15 @@ function add_book( $row, $isbn, $categories = array(), $versions = array(), $tim
 		'sarja'          => $row->sarja ?? '',
 		'kausi'          => $row->kausi,
 		'dates'          => array(
-			'ilmestymis'       => date_show( $row->ilmestymispvm ),
-			'embargo'          => date_show( $row->embargopvm ),
-			'yleiseenmyyntiin' => date_show( $row->yleiseenmyyntiinpvm ),
+			'ilmestymis'       => $row->ilmestymispvm,
+			'embargo'          => $row->embargopvm,
+			'yleiseenmyyntiin' => $row->yleiseenmyyntiinpvm,
 		),
 		'thema'          => $thema,
 		'keywords'       => parse_list( $row->avainsanat ),
 		'versions'       => $versions,
 		'timestamp'      => $row->muutosaikaleima,
 	);
-}
-
-function date_show( $date ) {
-	if ( empty( $date ) ) {
-		return '';
-	}
-
-	return substr( $date, 0, 4 ) . '-' . substr( $date, 4, 2 ) . '-' . substr( $date, 6, 2 );
 }
 
 function parse_list( $field ) {
