@@ -95,6 +95,15 @@ function update_book_meta( $post_id, $item ) {
 	if ( ! empty( $item['ilmestymis'] ) ) {
 		update_field( 'julkaisuaika', $item['ilmestymis'], $post_id );
 	}
+	if ( ! empty( $item['dates']['ilmestymis'] ) ) {
+		update_field( 'ilmestymispvm', $item['dates']['ilmestymis'], $post_id );
+	}
+	if ( ! empty( $item['dates']['embargo'] ) ) {
+		update_field( 'embargopvm', $item['dates']['embargo'], $post_id );
+	}
+	if ( ! empty( $item['dates']['yleiseenmyyntiin'] ) ) {
+		update_field( 'yleiseenmyyntiinpvm', $item['dates']['yleiseenmyyntiin'], $post_id );
+	}
 	if ( ! empty( $item['kirjastoluokka'] ) ) {
 		update_field( 'kirjastoluokka', $item['kirjastoluokka'], $post_id );
 	}
