@@ -5,12 +5,12 @@ namespace otavabooks;
 /**
  * Creates the book as a post, and adds the meta fields to it.
  *
- * @param array $item The object from the import file.
+ * @param array $item The json data from the import.
  * @param array $tags Optional extra tags.
  *
- * @return string Output to pass to the user.
+ * @return false|int|\WP_Error|null Output to pass to the user.
  */
-function create_book_object( array $item, array $tags = [] ) {
+function create_book_object( array $item, array $tags = array() ) {
 	if ( ! empty( $item['isbn'] ) ) {
 		$new_book = array(
 			'post_type'    => IMPORT_POST_TYPE,
@@ -37,7 +37,14 @@ function create_book_object( array $item, array $tags = [] ) {
 	return null;
 }
 
-function update_book_object( int $id, array $item, array $tags = [] ) {
+/**
+ * @param int   $id The post id.
+ * @param array $item The json data from the import.
+ * @param array $tags Optional extra tags.
+ *
+ * @return false|int|\WP_Error
+ */
+function update_book_object( int $id, array $item, array $tags = array() ) {
 	$update_book = array(
 		'ID'           => $id,
 		'post_title'   => $item['title'],
@@ -56,16 +63,21 @@ function update_book_object( int $id, array $item, array $tags = [] ) {
 	return false;
 }
 
+/**
+ * @param array $post The post array.
+ * @param array $item The json data from the import.
+ *
+ * @return void
+ */
 function parse_dates( &$post, $item ) {
-	$date = $item['dates']['ilmestymis'];
-	if ( ! empty( $item['dates']['embargo'] ) ) {
-		$date = $item['dates']['embargo'];
-	} elseif ( ! empty( $item['dates']['yleiseenmyyntiin'] ) ) {
-		$date = $item['dates']['yleiseenmyyntiin'];
+	$date = $item['ilmestymis'];
+	if ( ! empty( $item['dates']['ilmestymis'] ) ) {
+		$date = $item['dates']['ilmestymis'];
 	}
 	if ( ! empty( $date ) ) {
-		if ( strtotime( $date ) < time() ) {
-			$post['post_date'] = $date . ' 00:00:00';
+		$date_string = substr( $date, 0, 4 ) . '-' . substr( $date, 4, 2 ) . '-' . substr( $date, 6, 2 );
+		if ( strtotime( $date_string ) < time() ) {
+			$post['post_date'] = $date_string . ' 00:00:00';
 		}
 	}
 }
@@ -74,8 +86,8 @@ function parse_dates( &$post, $item ) {
 /**
  * Update the meta values for the books.
  *
- * @param $post_id - the post id.
- * @param $item - The json data from the import.
+ * @param int   $post_id The post id.
+ * @param array $item The json data from the import.
  */
 function update_book_meta( $post_id, $item ) {
 	// Get the categories.
@@ -180,7 +192,7 @@ function update_book_versions( $post_id, $versions ) {
 
 
 function get_isbn_list() {
-	$isbn = [];
+	$isbn = array();
 	foreach ( get_books() as $book ) {
 		$isbn[ $book['ID'] ] = $book['isbn'];
 	}
