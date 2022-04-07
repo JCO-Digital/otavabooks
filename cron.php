@@ -61,70 +61,47 @@ function cover_check_cron() {
 	// Setup parameters and get the "cover" cache.
 	$covers         = get_json( BOOK_COVER_DATA );
 	$books_per_page = 64;
+	$cat_target     = 12;
 
-	$book_args = array(
-		'post_type'      => 'otava_book',
-		'post_status'    => 'publish',
-		'posts_per_page' => $books_per_page,
-		'orderby'        => 'meta_value_num',
-		'order'          => 'DESC',
-		'meta_key'       => 'julkaisuaika',
-		'meta_query'     => array(
-			array(
-				'key'     => 'julkaisuaika',
-				'value'   => date( 'Ymd' ),
-				'compare' => '<=',
-			),
-		),
-		'tax_query'      => array(
-			'relation' => 'AND',
-			array(
-				'taxonomy' => 'otava_kategoria',
-				'field'    => 'slug',
-				'terms'    => array(
-					'kaunokirjat',
-					'lasten-ja-nuortenkirjat',
-					'tietokirjat',
-				),
-				'operator' => 'IN',
-			),
-		),
-	);
-
-	$start   = 0;
-	$max     = 1;
-	$checked = array();
+	$page    = 0;
+	$max     = 50;
+	$skipped = 0;
+	$checked = 0;
+	$cat     = array();
 
 	/*
 	 * This loop will always begin checking at the $books_per_page amount of newest books.
 	 * If all of them are checked, it will continue until it hits a chunk of $books_per_page that has not yet been checked, it will then check them and exit.
 	 * This means that each cron run of this will continually scan backwards unless we have to recheck a newer chunk.
 	 */
-	while ( $start < $max ) {
-		$books = get_posts( $book_args );
+
+	do {
+		$books = get_recent_books_sql( $books_per_page, $page ++ );
+		echo count($books);
 		if ( empty( $books ) ) {
 			break;
 		}
 
-		echo '<p>Iteration: ' . ( $start + 1 ) . ' of Cover checking</p>';
+		echo '<p>Iteration: ' . ( $page ) . ' of Cover checking</p>';
 
 		foreach ( $books as $book ) {
-			$isbn = get_field( 'isbn', $book->ID );
+			$isbn = $book['isbn'];
 			if ( empty( $isbn ) ) {
 				continue;
 			}
 
-			// If it exists, and either has a cover, or has been checked over a day ago, we add it to our checked array.
+			// If it exists, and either has a cover, or has been checked less than a day ago, we add it to our checked array.
 			if ( isset( $covers[ $isbn ] ) && ( $covers[ $isbn ]['has_cover'] || ( time() - $covers[ $isbn ]['timestamp'] ) < ( 24 * 60 * 60 ) ) ) {
 				echo '<p>Found already checked book with isbn: ' . $isbn . '</p>';
-				$checked[] = $isbn;
+				$skipped ++;
+				foreach ( $covers[ $isbn ]['category'] as $term ) {
+					$cat[ $term ] = ( $cat[ $term ] ?? 0 ) + 1;
+				}
 				continue;
 			}
 
 			// Otherwise we checks if the cover exists.
-			$book->isbn = $isbn;
-
-			$response = wp_safe_remote_get( get_book_cover_url( $book ) );
+			$response = wp_safe_remote_get( get_cdn_cover_url( $isbn ) );
 
 			// We have an error (not http error code).
 			if ( is_wp_error( $response ) ) {
@@ -138,25 +115,81 @@ function cover_check_cron() {
 				continue;
 			}
 
+			$checked ++;
 			echo '<p>Checking ' . $isbn . ' with response: ' . wp_remote_retrieve_response_code( $response ) . '</p>';
+
+			$has_cover = wp_remote_retrieve_response_code( $response ) === 200;
+
+			$terms = array();
+			foreach ( wp_get_post_terms( $book['ID'], 'otava_kategoria' ) as $term ) {
+				if ( $has_cover ) {
+					$cat[ $term->slug ] = ( $cat[ $term->slug ] ?? 0 ) + 1;
+				}
+				$terms[] = $term->slug;
+			}
 
 			// Update this books cover cache object.
 			$covers[ $isbn ] = array(
+				'id'        => $book['ID'],
+				'category'  => $terms,
 				'has_cover' => wp_remote_retrieve_response_code( $response ) === 200,
 				'timestamp' => time(),
 			);
 
 		}
-		// Check if up until this iteration we have checked/found all covers, so we can continue to the next iteration.
-		if ( count( $checked ) >= $books_per_page * ( $start + 1 ) ) {
-			$start++;
-			$max++;
-			$book_args['paged'] = $start;
-			continue;
-		}
-		// Otherwise we exit.
-		break;
-	}
+		// Check that each category has enough books.
+		$kaunokirjat = $cat['kaunokirjat'] ?? 0;
+		$tietokirjat = $cat['tietokirjat'] ?? 0;
+		$lasten      = $cat['lasten-ja-nuortenkirjat'] ?? 0;
+		var_dump($kaunokirjat);
+		var_dump($tietokirjat);
+		var_dump($lasten);
+		var_dump($checked);
+	} while ( $checked < $max && ( $kaunokirjat < $cat_target || $tietokirjat < $cat_target || $lasten < $cat_target ) );
+
 	// Update the cache.
 	put_json( BOOK_COVER_DATA, $covers );
+}
+
+function get_recent_books_sql( $nr = 64, $page = 0 ) {
+	if ( ! is_int( $nr ) || ! is_int( $page ) ) {
+		echo "Malformed arguments!";
+
+		return array();
+	}
+	global $wpdb;
+
+	$offset = $nr * $page;
+
+	$sql = "
+		SELECT
+			post.ID,
+			post.post_title,
+			isbn.meta_value as isbn,
+			ilmestymis.meta_value as ilmestymis,
+			julkaisu.meta_value as julk,
+			embargo.meta_value as embargo,
+			IF (ilmestymis.meta_value != '', str_to_date(ilmestymis.meta_value, '%Y%m%d'), str_to_date(julkaisu.meta_value, '%Y%m%d')) as pvm
+		FROM wp_posts as post
+		LEFT JOIN wp_postmeta as isbn
+		ON post.ID = isbn.post_id
+		AND isbn.meta_key = 'isbn'
+		LEFT JOIN wp_postmeta as ilmestymis
+		ON post.ID = ilmestymis.post_id
+		AND ilmestymis.meta_key = 'ilmestymispvm'
+		LEFT JOIN wp_postmeta as embargo
+		ON post.ID = embargo.post_id
+		AND embargo.meta_key = 'embargopvm'
+		LEFT JOIN wp_postmeta as julkaisu
+		ON post.ID = julkaisu.post_id
+		AND julkaisu.meta_key = 'julkaisuaika'
+		WHERE post.post_type = 'otava_book'
+		AND post.post_status = 'publish'
+		AND IF (embargo.meta_value != '', str_to_date(embargo.meta_value, '%Y%m%d'), DATE_ADD(IF (ilmestymis.meta_value != '', str_to_date(ilmestymis.meta_value, '%Y%m%d'), str_to_date(julkaisu.meta_value, '%Y%m%d')), INTERVAL -30 DAY)) < now()
+		ORDER BY pvm DESC
+		LIMIT $nr
+		OFFSET $offset
+		";
+
+	return $wpdb->get_results( $sql, ARRAY_A );
 }

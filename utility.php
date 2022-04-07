@@ -1,5 +1,7 @@
 <?php
 
+use Nicebooks\Isbn\{Exception\InvalidIsbnException, Isbn};
+
 function delete_books( $delete = 20 ) {
 	$deleted = 0;
 	$args    = array(
@@ -78,6 +80,38 @@ function check_for_cover( $isbn ) {
 
 	return null;
 }
+
+const CDN_BASE_URL = 'https://mediapankki.otava.fi/api/v1/assets/by-isbn/';
+
+function get_cdn_cover_url ( $isbn, $max_width = false, $max_height = false ) {
+	try {
+		$isbn_object = Isbn::of( $isbn );
+		$arguments   = array();
+		if ( $max_width ) {
+			$arguments['maxWidth'] = $max_width;
+		}
+		if ( $max_height ) {
+			$arguments['maxHeight'] = $max_height;
+		}
+		$query = '';
+
+		if ( ! empty( $arguments ) ) {
+			$query_string = http_build_query( $arguments );
+			$query       .= "?{$query_string}";
+		}
+
+		return CDN_BASE_URL . $isbn_object->format() . '.jpg' . $query;
+
+	} catch ( InvalidIsbnException  $exception ) {
+		if ( function_exists( 'write_log' ) ) {
+			write_log( $exception->getMessage() );
+		}
+
+		return false;
+	}
+
+}
+
 
 function redirect_books() {
 	global $wp;

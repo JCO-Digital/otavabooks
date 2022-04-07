@@ -74,7 +74,7 @@ function parse_dates( &$post, $item ) {
 	if ( ! empty( $item['dates']['ilmestymis'] ) ) {
 		$date = $item['dates']['ilmestymis'];
 	}
-	if ( ! empty( $date ) ) {
+	if ( strlen( $date ) === 8 ) {
 		$date_string = substr( $date, 0, 4 ) . '-' . substr( $date, 4, 2 ) . '-' . substr( $date, 6, 2 );
 		if ( strtotime( $date_string ) < time() ) {
 			$post['post_date'] = $date_string . ' 00:00:00';
