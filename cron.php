@@ -77,12 +77,11 @@ function cover_check_cron() {
 
 	do {
 		$books = get_recent_books_sql( $books_per_page, $page ++ );
-		echo count($books);
 		if ( empty( $books ) ) {
 			break;
 		}
 
-		echo '<p>Iteration: ' . ( $page ) . ' of Cover checking</p>';
+		echo "<p>Iteration: $page of Cover checking</p>";
 
 		foreach ( $books as $book ) {
 			$isbn = $book['isbn'];
@@ -91,11 +90,13 @@ function cover_check_cron() {
 			}
 
 			// If it exists, and either has a cover, or has been checked less than a day ago, we add it to our checked array.
-			if ( isset( $covers[ $isbn ] ) && ( $covers[ $isbn ]['has_cover'] || ( time() - $covers[ $isbn ]['timestamp'] ) < ( 24 * 60 * 60 ) ) ) {
-				echo '<p>Found already checked book with isbn: ' . $isbn . '</p>';
+			if ( isset( $covers[ $isbn ] ) && ( time() - $covers[ $isbn ]['timestamp'] ) < ( 24 * 60 * 60 ) ) {
+				echo "<p>Found already checked book with isbn: $isbn</p>";
 				$skipped ++;
-				foreach ( $covers[ $isbn ]['category'] as $term ) {
-					$cat[ $term ] = ( $cat[ $term ] ?? 0 ) + 1;
+				if ( $covers[ $isbn ]['has_cover'] ) {
+					foreach ( $covers[ $isbn ]['category'] as $term ) {
+						$cat[ $term ] = ( $cat[ $term ] ?? 0 ) + 1;
+					}
 				}
 				continue;
 			}
@@ -141,10 +142,6 @@ function cover_check_cron() {
 		$kaunokirjat = $cat['kaunokirjat'] ?? 0;
 		$tietokirjat = $cat['tietokirjat'] ?? 0;
 		$lasten      = $cat['lasten-ja-nuortenkirjat'] ?? 0;
-		var_dump($kaunokirjat);
-		var_dump($tietokirjat);
-		var_dump($lasten);
-		var_dump($checked);
 	} while ( $checked < $max && ( $kaunokirjat < $cat_target || $tietokirjat < $cat_target || $lasten < $cat_target ) );
 
 	// Update the cache.
@@ -166,10 +163,7 @@ function get_recent_books_sql( $nr = 64, $page = 0 ) {
 			post.ID,
 			post.post_title,
 			isbn.meta_value as isbn,
-			ilmestymis.meta_value as ilmestymis,
-			julkaisu.meta_value as julk,
-			embargo.meta_value as embargo,
-			IF (ilmestymis.meta_value != '', str_to_date(ilmestymis.meta_value, '%Y%m%d'), str_to_date(julkaisu.meta_value, '%Y%m%d')) as pvm
+			IF (LENGTH(ilmestymis.meta_value) > 7, str_to_date(ilmestymis.meta_value, '%Y%m%d'), str_to_date(julkaisu.meta_value, '%Y%m%d')) as pvm
 		FROM wp_posts as post
 		LEFT JOIN wp_postmeta as isbn
 		ON post.ID = isbn.post_id
@@ -185,8 +179,7 @@ function get_recent_books_sql( $nr = 64, $page = 0 ) {
 		AND julkaisu.meta_key = 'julkaisuaika'
 		WHERE post.post_type = 'otava_book'
 		AND post.post_status = 'publish'
-		AND IF (embargo.meta_value != '', str_to_date(embargo.meta_value, '%Y%m%d'), DATE_ADD(IF (ilmestymis.meta_value != '', str_to_date(ilmestymis.meta_value, '%Y%m%d'), str_to_date(julkaisu.meta_value, '%Y%m%d')), INTERVAL -30 DAY)) < now()
-		ORDER BY pvm DESC
+		AND IF (LENGTH(embargo.meta_value) > 7, str_to_date(embargo.meta_value, '%Y%m%d'), DATE_ADD(IF (LENGTH(ilmestymis.meta_value) > 7, str_to_date(ilmestymis.meta_value, '%Y%m%d'), str_to_date(julkaisu.meta_value, '%Y%m%d')), INTERVAL -30 DAY)) < now()
 		LIMIT $nr
 		OFFSET $offset
 		";
