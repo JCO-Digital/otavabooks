@@ -93,6 +93,7 @@ function cover_check_cron() {
 			if ( isset( $covers[ $isbn ] ) && ( time() - $covers[ $isbn ]['timestamp'] ) < ( 24 * 60 * 60 ) ) {
 				echo "<p>Found already checked book with isbn: $isbn</p>";
 				$skipped ++;
+				$covers[ $isbn ]['pvm'] = $book['pvm'];
 				if ( $covers[ $isbn ]['has_cover'] ) {
 					foreach ( $covers[ $isbn ]['category'] as $term ) {
 						$cat[ $term ] = ( $cat[ $term ] ?? 0 ) + 1;
@@ -134,6 +135,7 @@ function cover_check_cron() {
 				'id'        => $book['ID'],
 				'category'  => $terms,
 				'has_cover' => wp_remote_retrieve_response_code( $response ) === 200,
+				'pvm'       => $book['pvm'],
 				'timestamp' => time(),
 			);
 
@@ -142,11 +144,29 @@ function cover_check_cron() {
 		$kaunokirjat = $cat['kaunokirjat'] ?? 0;
 		$tietokirjat = $cat['tietokirjat'] ?? 0;
 		$lasten      = $cat['lasten-ja-nuortenkirjat'] ?? 0;
+		echo "Kaunokirjat: $kaunokirjat <br/>";
+		echo "Tietokirjat: $tietokirjat<br/>";
+		echo "Lastenkirjat: $lasten <br/>";
 	} while ( $checked < $max && ( $kaunokirjat < $cat_target || $tietokirjat < $cat_target || $lasten < $cat_target ) );
+
+	// Sort covers
+	uasort(
+		$covers,
+		function ( $a, $b ) {
+			if ( $a['pvm'] === $b['pvm'] ) {
+				return 0;
+			}
+			if ( $a['pvm'] > $b['pvm'] ) {
+				return -1;
+			}
+			return 1;
+		}
+	);
 
 	// Update the cache.
 	put_json( BOOK_COVER_DATA, $covers );
 }
+
 
 function get_recent_books_sql( $nr = 64, $page = 0 ) {
 	if ( ! is_int( $nr ) || ! is_int( $page ) ) {
@@ -180,6 +200,7 @@ function get_recent_books_sql( $nr = 64, $page = 0 ) {
 		WHERE post.post_type = 'otava_book'
 		AND post.post_status = 'publish'
 		AND IF (LENGTH(embargo.meta_value) > 7, str_to_date(embargo.meta_value, '%Y%m%d'), DATE_ADD(IF (LENGTH(ilmestymis.meta_value) > 7, str_to_date(ilmestymis.meta_value, '%Y%m%d'), str_to_date(julkaisu.meta_value, '%Y%m%d')), INTERVAL -30 DAY)) < now()
+		ORDER BY pvm DESC
 		LIMIT $nr
 		OFFSET $offset
 		";
