@@ -153,12 +153,13 @@ function cover_check_cron() {
 	uasort(
 		$covers,
 		function ( $a, $b ) {
-			if ( $a['pvm'] === $b['pvm'] ) {
+			if ( $a['pvm'] ?? '' === $b['pvm'] ?? '' ) {
 				return 0;
 			}
-			if ( $a['pvm'] > $b['pvm'] ) {
-				return -1;
+			if ( $a['pvm'] ?? '' > $b['pvm'] ?? '' ) {
+				return - 1;
 			}
+
 			return 1;
 		}
 	);
