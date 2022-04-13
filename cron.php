@@ -89,7 +89,7 @@ function cover_check_cron() {
 				continue;
 			}
 
-			// If it exists, and either has a cover, or has been checked less than a day ago, we add it to our checked array.
+			// If it exists and has been checked less than a day ago.
 			if ( isset( $covers[ $isbn ] ) && ( time() - $covers[ $isbn ]['timestamp'] ) < ( 24 * 60 * 60 ) ) {
 				echo "<p>Found already checked book with isbn: $isbn</p>";
 				$skipped ++;
