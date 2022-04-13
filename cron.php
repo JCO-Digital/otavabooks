@@ -69,7 +69,7 @@ function cover_check_cron() {
 	$checked = 0;
 	$cat     = array();
 
-	$update_ts  = time();
+	$update_ts = time();
 
 	/*
 	 * This loop will always begin checking at the $books_per_page amount of newest books.
@@ -161,10 +161,7 @@ function cover_check_cron() {
 
 	// Remove stale covers.
 	foreach ( $covers as $isbn => $cover ) {
-		if ( $cover['updated'] !== $update_ts ) {
-			var_dump($cover['updated']);
-			var_dump($update_ts);
-
+		if ( empty( $cover['updated'] ) || $cover['updated'] !== $update_ts ) {
 			echo "Remove: $cover[title] <br/>";
 			unset( $covers[ $isbn ] );
 		}
