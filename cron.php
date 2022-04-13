@@ -69,6 +69,8 @@ function cover_check_cron() {
 	$checked = 0;
 	$cat     = array();
 
+	$update_ts  = time();
+
 	/*
 	 * This loop will always begin checking at the $books_per_page amount of newest books.
 	 * If all of them are checked, it will continue until it hits a chunk of $books_per_page that has not yet been checked, it will then check them and exit.
@@ -90,10 +92,16 @@ function cover_check_cron() {
 			}
 
 			// If it exists and has been checked less than a day ago.
-			if ( isset( $covers[ $isbn ] ) && ( time() - $covers[ $isbn ]['timestamp'] ) < ( 24 * 60 * 60 ) ) {
+			if (
+				isset( $covers[ $isbn ] ) &&
+				! empty( $covers[ $isbn ]['id'] ) &&
+				! empty( $covers[ $isbn ]['category'] ) &&
+				( time() - $covers[ $isbn ]['timestamp'] ) < ( 24 * 60 * 60 )
+			) {
 				echo "<p>Found already checked book with isbn: $isbn</p>";
 				$skipped ++;
-				$covers[ $isbn ]['pvm'] = $book['pvm'];
+				$covers[ $isbn ]['pvm']     = $book['pvm'];
+				$covers[ $isbn ]['updated'] = $update_ts;
 				if ( $covers[ $isbn ]['has_cover'] ) {
 					foreach ( $covers[ $isbn ]['category'] as $term ) {
 						$cat[ $term ] = ( $cat[ $term ] ?? 0 ) + 1;
@@ -133,10 +141,12 @@ function cover_check_cron() {
 			// Update this books cover cache object.
 			$covers[ $isbn ] = array(
 				'id'        => $book['ID'],
+				'title'     => $book['post_title'],
 				'category'  => $terms,
 				'has_cover' => wp_remote_retrieve_response_code( $response ) === 200,
 				'pvm'       => $book['pvm'],
 				'timestamp' => time(),
+				'updated'   => $update_ts,
 			);
 
 		}
@@ -149,7 +159,18 @@ function cover_check_cron() {
 		echo "Lastenkirjat: $lasten <br/>";
 	} while ( $checked < $max && ( $kaunokirjat < $cat_target || $tietokirjat < $cat_target || $lasten < $cat_target ) );
 
-	// Sort covers
+	// Remove stale covers.
+	foreach ( $covers as $isbn => $cover ) {
+		if ( $cover['updated'] !== $update_ts ) {
+			var_dump($cover['updated']);
+			var_dump($update_ts);
+
+			echo "Remove: $cover[title] <br/>";
+			unset( $covers[ $isbn ] );
+		}
+	}
+
+	// Sort covers.
 	uasort(
 		$covers,
 		function ( $a, $b ) {
@@ -200,7 +221,7 @@ function get_recent_books_sql( $nr = 64, $page = 0 ) {
 		AND julkaisu.meta_key = 'julkaisuaika'
 		WHERE post.post_type = 'otava_book'
 		AND post.post_status = 'publish'
-		AND IF (LENGTH(embargo.meta_value) > 7, str_to_date(embargo.meta_value, '%Y%m%d'), DATE_ADD(IF (LENGTH(ilmestymis.meta_value) > 7, str_to_date(ilmestymis.meta_value, '%Y%m%d'), str_to_date(julkaisu.meta_value, '%Y%m%d')), INTERVAL -30 DAY)) < now()
+		AND IF (LENGTH(embargo.meta_value) > 7, str_to_date(embargo.meta_value, '%Y%m%d'), IF (LENGTH(ilmestymis.meta_value) > 7, str_to_date(ilmestymis.meta_value, '%Y%m%d'), str_to_date(julkaisu.meta_value, '%Y%m%d'))) < now()
 		ORDER BY pvm DESC
 		LIMIT $nr
 		OFFSET $offset
