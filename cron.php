@@ -83,7 +83,7 @@ function cover_check_cron() {
 			break;
 		}
 
-		echo "<p>Iteration: $page of Cover checking</p>";
+		echo "<p>Iteration: $page of Cover checking</p>\n";
 
 		foreach ( $books as $book ) {
 			$isbn = $book['isbn'];
@@ -98,7 +98,7 @@ function cover_check_cron() {
 				! empty( $covers[ $isbn ]['category'] ) &&
 				( time() - $covers[ $isbn ]['timestamp'] ) < ( 24 * 60 * 60 )
 			) {
-				echo "<p>Found already checked book with isbn: $isbn</p>";
+				echo "<p>Found already checked book with isbn: $isbn</p>\n";
 				$skipped ++;
 				$covers[ $isbn ]['pvm']     = $book['pvm'];
 				$covers[ $isbn ]['updated'] = $update_ts;
@@ -154,33 +154,18 @@ function cover_check_cron() {
 		$kaunokirjat = $cat['kaunokirjat'] ?? 0;
 		$tietokirjat = $cat['tietokirjat'] ?? 0;
 		$lasten      = $cat['lasten-ja-nuortenkirjat'] ?? 0;
-		echo "Kaunokirjat: $kaunokirjat <br/>";
-		echo "Tietokirjat: $tietokirjat<br/>";
-		echo "Lastenkirjat: $lasten <br/>";
+		echo "Kaunokirjat: $kaunokirjat <br/>\n";
+		echo "Tietokirjat: $tietokirjat<br/>\n";
+		echo "Lastenkirjat: $lasten <br/>\n";
 	} while ( $checked < $max && ( $kaunokirjat < $cat_target || $tietokirjat < $cat_target || $lasten < $cat_target ) );
 
 	// Remove stale covers.
 	foreach ( $covers as $isbn => $cover ) {
 		if ( empty( $cover['updated'] ) || $cover['updated'] !== $update_ts ) {
-			echo "Remove: $cover[title] <br/>";
+			echo "Remove: $cover[title] <br/>\n";
 			unset( $covers[ $isbn ] );
 		}
 	}
-
-	// Sort covers.
-	uasort(
-		$covers,
-		function ( $a, $b ) {
-			if ( $a['pvm'] ?? '' === $b['pvm'] ?? '' ) {
-				return 0;
-			}
-			if ( $a['pvm'] ?? '' > $b['pvm'] ?? '' ) {
-				return - 1;
-			}
-
-			return 1;
-		}
-	);
 
 	// Update the cache.
 	put_json( BOOK_COVER_DATA, $covers );
