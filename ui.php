@@ -66,6 +66,14 @@ function show_book_import_page() {
 		cover_check_cron();
 	}
 
+	// Clean covers.
+	if ( is_admin() && ! empty( $_GET['cleancovers'] ) && ctype_digit( $_GET['cleancovers'] ) ) {
+		$deleted = get_book_covers($_GET['cleancovers']);
+		if ( $deleted > 0 ) {
+			$update_page = true;
+		}
+	}
+
 	echo '</p>';
 
 	echo '
@@ -114,6 +122,12 @@ function show_book_import_page() {
         <p>
             <a class="button action" href="?page=book-import&amp;runcovercron=1">Run cover checking cron</a>
         </p>';
+
+		echo '
+        <p>
+            <a class="button action" href="?page=book-import&amp;cleancovers=30">Clean old covers</a>
+        </p>';
+
 	}
 
 	if ( $update_page ) {

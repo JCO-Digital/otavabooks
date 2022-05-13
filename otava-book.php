@@ -256,3 +256,25 @@ function parse_name( $name ) {
 
 	return $name;
 }
+
+function get_book_covers ($max_delete) {
+	$nr = 0;
+	$attachments = get_posts( array(
+		'post_type' => 'attachment',
+		'posts_per_page' => -1,
+	) );
+	$count = count($attachments);
+	echo "Found $count covers<br/>\n";
+	foreach ($attachments as $attachment) {
+		if (strpos($attachment->guid, '/wp-content/uploads/isbn') !== false) {
+			if (empty($attachment->post_parent)) {
+				wp_delete_attachment( $attachment->ID, true );
+				if (++$nr >= $max_delete) {
+					echo "Max reached";
+					break;
+				}
+			}
+		}
+	}
+	return $nr;
+}
