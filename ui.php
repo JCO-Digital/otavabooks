@@ -37,11 +37,15 @@ function show_book_import_page() {
 		echo "Updated $updated books.";
 	}
 
+	// Update One Book.
+	if ( is_admin() && ! empty( $_GET['isbnupdate'] ) ) {
+		update_book( $_GET['isbnupdate'] );
+	}
+
 	// Reset Timestamps.
 	if ( is_admin() && ! empty( $_GET['resetupdate'] ) && ctype_digit( $_GET['resetupdate'] ) ) {
 		unlink( IMPORT_TIMESTAMP_DATA );
 	}
-
 
 	// Delete Books.
 	if ( is_admin() && ! empty( $_GET['bookdelete'] ) && ctype_digit( $_GET['bookdelete'] ) ) {

@@ -23,10 +23,10 @@ function make_book_list() {
 				$id     = $row->kantanumero;
 				// Get the book, or create an empty object if not exists.
 				$book = $data[ $id ] ?? array(
-						'categories' => array(),
-						'versions'   => array(),
-						'timestamp'  => 0,
-					);
+					'categories' => array(),
+					'versions'   => array(),
+					'timestamp'  => 0,
+				);
 
 				if ( $master ) {
 					// If product is master, create the real book object.
@@ -222,6 +222,27 @@ function update_books( $max = 1 ) {
 	return $updated;
 }
 
+function update_book( $isbn ) {
+	$isbns = get_isbn_list();
+	$books = get_json( IMPORT_BOOK_DATA );
+	$timestamps = get_json( IMPORT_TIMESTAMP_DATA );
+	foreach ( $books as $book ) {
+		if ( $book['isbn'] === $isbn ) {
+			$post_id = array_search( $book['isbn'], $isbns, true );
+			if ( false !== $post_id ) {
+				$id = update_book_object( $post_id, $book );
+				if ( false === $id ) {
+					echo 'Failed';
+				} else {
+					echo "Updated: $book[title]<br/>\n";
+					$timestamps[ $book['isbn'] ] = $book['timestamp'];
+				}
+			}
+		}
+	}
+	//put_json( IMPORT_TIMESTAMP_DATA, $timestamps );
+
+}
 
 if ( ! function_exists( 'write_log' ) ) {
 	function write_log( $log ) {
