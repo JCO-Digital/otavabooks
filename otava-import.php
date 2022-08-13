@@ -50,9 +50,11 @@ function make_book_list() {
 			}
 		}
 	}
-	foreach ( $data as $id => $book ) {
+	foreach ( $data as $id => &$book ) {
 		if ( empty( $book['isbn'] ) ) {
 			unset( $data[ $id ] );
+		} else {
+			$book['checksum'] = md5( serialize( $book ) );
 		}
 	}
 
@@ -146,19 +148,19 @@ function get_import_data() {
  * @param int $max Maximum imported items per run.
  */
 function import_books( $max = 1 ) {
-	$imported   = 0;
-	$skipped    = 0;
-	$failed     = 0;
-	$isbn       = get_isbn_list();
-	$books      = get_json( IMPORT_BOOK_DATA );
-	$timestamps = get_json( IMPORT_TIMESTAMP_DATA );
+	$imported  = 0;
+	$skipped   = 0;
+	$failed    = 0;
+	$isbn      = get_isbn_list();
+	$books     = get_json( IMPORT_BOOK_DATA );
+	$checksums = get_json( IMPORT_CHECKSUM_DATA );
 
 	foreach ( $books as $id => $book ) {
 		if ( ! in_array( $book['isbn'], $isbn, true ) ) {
 			$id = create_book_object( $book );
 			if ( $id ) {
 				echo "Imported: $book[title]<br/>\n";
-				$timestamps[ $book['isbn'] ] = $book['timestamp'];
+				$checksums[ $book['isbn'] ] = $book['checksum'];
 				$imported ++;
 			} elseif ( is_null( $id ) ) {
 				$skipped ++;
@@ -172,7 +174,7 @@ function import_books( $max = 1 ) {
 			break;
 		}
 	}
-	put_json( IMPORT_TIMESTAMP_DATA, $timestamps );
+	put_json( IMPORT_CHECKSUM_DATA, $checksums );
 	echo "<br/>";
 	if ( $skipped ) {
 		echo "Skipped $skipped books<br/>";
@@ -185,22 +187,22 @@ function import_books( $max = 1 ) {
 }
 
 function update_books( $max = 1 ) {
-	$updated    = 0;
-	$skipped    = 0;
-	$failed     = 0;
-	$isbn       = get_isbn_list();
-	$books      = get_json( IMPORT_BOOK_DATA );
-	$timestamps = get_json( IMPORT_TIMESTAMP_DATA );
+	$updated   = 0;
+	$skipped   = 0;
+	$failed    = 0;
+	$isbn      = get_isbn_list();
+	$books     = get_json( IMPORT_BOOK_DATA );
+	$checksums = get_json( IMPORT_CHECKSUM_DATA );
 
 	foreach ( $books as $book ) {
 		$post_id = array_search( $book['isbn'], $isbn, true );
-		if ( false !== $post_id && ( empty( $timestamps[ $book['isbn'] ] ) || $timestamps[ $book['isbn'] ] !== $book['timestamp'] ) ) {
+		if ( false !== $post_id && ( empty( $checksums[ $book['isbn'] ] ) || $checksums[ $book['isbn'] ] !== $book['checksum'] ) ) {
 			$id = update_book_object( $post_id, $book );
 			if ( false === $id ) {
 				$failed ++;
 			} else {
 				echo "Updated: $book[title]<br/>\n";
-				$timestamps[ $book['isbn'] ] = $book['timestamp'];
+				$checksums[ $book['isbn'] ] = $book['checksum'];
 				$updated ++;
 			}
 		} else {
@@ -210,7 +212,7 @@ function update_books( $max = 1 ) {
 			break;
 		}
 	}
-	put_json( IMPORT_TIMESTAMP_DATA, $timestamps );
+	put_json( IMPORT_CHECKSUM_DATA, $checksums );
 	echo "<br/>";
 	if ( $skipped ) {
 		echo "Skipped $skipped books<br/>";
@@ -223,9 +225,9 @@ function update_books( $max = 1 ) {
 }
 
 function update_book( $isbn ) {
-	$isbns = get_isbn_list();
-	$books = get_json( IMPORT_BOOK_DATA );
-	$timestamps = get_json( IMPORT_TIMESTAMP_DATA );
+	$isbns     = get_isbn_list();
+	$books     = get_json( IMPORT_BOOK_DATA );
+	$checksums = get_json( IMPORT_CHECKSUM_DATA );
 	foreach ( $books as $book ) {
 		if ( $book['isbn'] === $isbn ) {
 			$post_id = array_search( $book['isbn'], $isbns, true );
@@ -235,13 +237,12 @@ function update_book( $isbn ) {
 					echo 'Failed';
 				} else {
 					echo "Updated: $book[title]<br/>\n";
-					$timestamps[ $book['isbn'] ] = $book['timestamp'];
+					$checksums[ $book['isbn'] ] = $book['checksum'];
 				}
 			}
 		}
 	}
-	//put_json( IMPORT_TIMESTAMP_DATA, $timestamps );
-
+	put_json( IMPORT_CHECKSUM_DATA, $checksums );
 }
 
 if ( ! function_exists( 'write_log' ) ) {

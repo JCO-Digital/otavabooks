@@ -44,7 +44,12 @@ function show_book_import_page() {
 
 	// Reset Timestamps.
 	if ( is_admin() && ! empty( $_GET['resetupdate'] ) && ctype_digit( $_GET['resetupdate'] ) ) {
-		unlink( IMPORT_TIMESTAMP_DATA );
+		if ( file_exists( IMPORT_TIMESTAMP_DATA ) ) {
+			unlink( IMPORT_TIMESTAMP_DATA );
+		}
+		if ( file_exists( IMPORT_CHECKSUM_DATA ) ) {
+			unlink( IMPORT_CHECKSUM_DATA );
+		}
 	}
 
 	// Delete Books.
@@ -72,7 +77,7 @@ function show_book_import_page() {
 
 	// Clean covers.
 	if ( is_admin() && ! empty( $_GET['cleancovers'] ) && ctype_digit( $_GET['cleancovers'] ) ) {
-		$deleted = get_book_covers($_GET['cleancovers']);
+		$deleted = get_book_covers( $_GET['cleancovers'] );
 		if ( $deleted > 0 ) {
 			$update_page = true;
 		}

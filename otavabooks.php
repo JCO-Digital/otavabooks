@@ -3,7 +3,7 @@
 Plugin Name: Otava Kirjat
 Plugin URI: http://otava.fi/
 Description: CPT, ACF & sync / import functionality.
-Version: 1.1.0
+Version: 1.2.0
 Author: JCO Digital
 Author URI: http://jco.fi/
 License: GNU General Public License v2 or later
@@ -22,6 +22,7 @@ define( 'IMPORT_POST_TYPE', 'otava_book' );
 define( 'IMPORT_AUTHOR_TYPE', 'otava_author' );
 define( 'IMPORT_BOOK_DATA', get_upload_dir() . '/book_data.json' );
 define( 'IMPORT_TIMESTAMP_DATA', get_upload_dir() . '/timestamp_data.json' );
+define( 'IMPORT_CHECKSUM_DATA', get_upload_dir() . '/checksum_data.json' );
 define( 'BOOK_COVER_DATA', get_upload_dir() . '/cover_data.json' );
 define( 'IMPORT_TASK', 'otavabooks_import_cron_task' );
 define( 'COVER_TASK', 'otavabooks_check_cover_task' );
