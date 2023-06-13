@@ -19,12 +19,13 @@ function create_book_object( array $item, array $tags = array() ) {
 			'post_status'  => 'publish',
 			'post_author'  => get_author_setting(),
 		);
-		parse_dates( $new_book, $item );
+		$date     = parse_dates( $new_book, $item );
 
 		// Insert the post into the database.
 		$post_id = wp_insert_post( $new_book );
 		if ( ! empty( $post_id ) ) {
-			add_post_meta( $post_id, 'isbn', trim( $item['isbn'] ) );
+			update_post_meta( $post_id, 'isbn', trim( $item['isbn'] ) );
+			update_field( 'ilmestymispvm', $date, $post_id );
 			update_book_meta( $post_id, $item );
 			update_book_versions( $post_id, $item['versions'] );
 
@@ -38,7 +39,7 @@ function create_book_object( array $item, array $tags = array() ) {
 }
 
 /**
- * @param int   $id The post id.
+ * @param int $id The post id.
  * @param array $item The json data from the import.
  * @param array $tags Optional extra tags.
  *
@@ -50,10 +51,11 @@ function update_book_object( int $id, array $item, array $tags = array() ) {
 		'post_title'   => $item['title'],
 		'post_content' => $item['content'],
 	);
-	parse_dates( $update_book, $item );
+	$date        = parse_dates( $update_book, $item );
 
 	$post_id = wp_update_post( $update_book );
 	if ( ! empty( $post_id ) ) {
+		update_field( 'ilmestymispvm', $date, $post_id );
 		update_book_meta( $post_id, $item );
 		update_book_versions( $post_id, $item['versions'] );
 
@@ -67,26 +69,33 @@ function update_book_object( int $id, array $item, array $tags = array() ) {
  * @param array $post The post array.
  * @param array $item The json data from the import.
  *
- * @return void
+ * @return string
  */
 function parse_dates( &$post, $item ) {
-	$date = $item['ilmestymis'];
+	// Do the date magic.
+	$date = $item['dates']['vvvvkk'];
 	if ( ! empty( $item['dates']['ilmestymis'] ) ) {
 		$date = $item['dates']['ilmestymis'];
 	}
+	if ( ! empty( $item['dates']['ensimmainen'] ) ) {
+		$date = $item['dates']['ensimmainen'];
+	}
+
 	if ( strlen( $date ) === 8 ) {
 		$date_string = substr( $date, 0, 4 ) . '-' . substr( $date, 4, 2 ) . '-' . substr( $date, 6, 2 );
 		if ( strtotime( $date_string ) < time() ) {
 			$post['post_date'] = $date_string . ' 00:00:00';
 		}
 	}
+
+	return $date;
 }
 
 
 /**
  * Update the meta values for the books.
  *
- * @param int   $post_id The post id.
+ * @param int $post_id The post id.
  * @param array $item The json data from the import.
  */
 function update_book_meta( $post_id, $item ) {
@@ -103,18 +112,6 @@ function update_book_meta( $post_id, $item ) {
 
 	if ( ! empty( $item['alkuteos'] ) ) {
 		update_field( 'alkuteos', $item['alkuteos'], $post_id );
-	}
-	if ( ! empty( $item['ilmestymis'] ) ) {
-		update_field( 'julkaisuaika', $item['ilmestymis'], $post_id );
-	}
-	if ( ! empty( $item['dates']['ilmestymis'] ) ) {
-		update_field( 'ilmestymispvm', $item['dates']['ilmestymis'], $post_id );
-	}
-	if ( ! empty( $item['dates']['embargo'] ) ) {
-		update_field( 'embargopvm', $item['dates']['embargo'], $post_id );
-	}
-	if ( ! empty( $item['dates']['yleiseenmyyntiin'] ) ) {
-		update_field( 'yleiseenmyyntiinpvm', $item['dates']['yleiseenmyyntiin'], $post_id );
 	}
 	if ( ! empty( $item['kirjastoluokka'] ) ) {
 		update_field( 'kirjastoluokka', $item['kirjastoluokka'], $post_id );
@@ -257,24 +254,25 @@ function parse_name( $name ) {
 	return $name;
 }
 
-function get_book_covers ($max_delete) {
-	$nr = 0;
+function get_book_covers( $max_delete ) {
+	$nr          = 0;
 	$attachments = get_posts( array(
-		'post_type' => 'attachment',
-		'posts_per_page' => -1,
+		'post_type'      => 'attachment',
+		'posts_per_page' => - 1,
 	) );
-	$count = count($attachments);
+	$count       = count( $attachments );
 	echo "Found $count covers<br/>\n";
-	foreach ($attachments as $attachment) {
-		if (strpos($attachment->guid, '/wp-content/uploads/isbn') !== false) {
-			if (empty($attachment->post_parent)) {
+	foreach ( $attachments as $attachment ) {
+		if ( strpos( $attachment->guid, '/wp-content/uploads/isbn' ) !== false ) {
+			if ( empty( $attachment->post_parent ) ) {
 				wp_delete_attachment( $attachment->ID, true );
-				if (++$nr >= $max_delete) {
+				if ( ++ $nr >= $max_delete ) {
 					echo "Max reached";
 					break;
 				}
 			}
 		}
 	}
+
 	return $nr;
 }

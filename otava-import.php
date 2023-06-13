@@ -45,7 +45,7 @@ function make_book_list() {
 				// Write/overwrite book into array.
 				$data[ $id ] = $book;
 			} catch ( InvalidIsbnException $exception ) {
-				echo "error";
+				echo 'error';
 				write_log( $exception->getMessage() );
 			}
 		}
@@ -54,7 +54,7 @@ function make_book_list() {
 		if ( empty( $book['isbn'] ) ) {
 			unset( $data[ $id ] );
 		} else {
-			$book['checksum'] = md5( serialize( $book ) );
+			$book['checksum'] = md5( wp_json_encode( $book ) );
 		}
 	}
 
@@ -76,13 +76,17 @@ function add_version( $isbn, $row ) {
 
 function add_book( $row, $isbn, $categories = array(), $versions = array(), $timestamp = 0 ) {
 	$thema = array();
+	foreach ( array( $row->thema_1, $row->thema_2, $row->thema_3 ) as $item ) {
+		if ( preg_match( '/([A-Z]+) (.*)/', $item, $match ) ) {
+			$thema[ $match[1] ] = $match[2];
+		}
+	}
 
 	return array(
 		'isbn'           => $isbn,
 		'title'          => wp_strip_all_tags( $row->onix_tuotenimi ),
 		'sub_title'      => wp_strip_all_tags( $row->alaotsikko ),
 		'content'        => $row->markkinointiteksti,
-		'ilmestymis'     => $row->ilmestymis_vvvvkk . '01',
 		'authors'        => parse_list( $row->kirjantekija ),
 		'kuvittaja'      => parse_list( $row->kuvittaja ),
 		'suomentaja'     => parse_list( $row->suomentaja ),
@@ -94,6 +98,8 @@ function add_book( $row, $isbn, $categories = array(), $versions = array(), $tim
 		'sarja'          => $row->sarja ?? '',
 		'kausi'          => $row->kausi,
 		'dates'          => array(
+			'ensimmainen'      => $row->ensimmainenilmestymispvm,
+			'vvvvkk'           => $row->ilmestymis_vvvvkk . '01',
 			'ilmestymis'       => $row->ilmestymispvm,
 			'embargo'          => $row->embargopvm,
 			'yleiseenmyyntiin' => $row->yleiseenmyyntiinpvm,
@@ -120,10 +126,11 @@ function parse_list( $field ) {
 /**
  * Fetches the import file and parses it into array of objects.
  *
- * @return array|mixed|object
+ * @return array
  */
 function get_import_data() {
-	$data  = file_get_contents( get_import_url_setting() );
+	$data = file_get_contents( get_import_url_setting() );
+	// Filter file header data.
 	$start = strpos( $data, '[' );
 	if ( $start > 0 ) {
 		$data = substr( $data, $start );
@@ -147,7 +154,7 @@ function get_import_data() {
 /**
  * @param int $max Maximum imported items per run.
  */
-function import_books( $max = 1 ) {
+function import_books( $max = 1 ): int {
 	$imported  = 0;
 	$skipped   = 0;
 	$failed    = 0;
@@ -175,7 +182,7 @@ function import_books( $max = 1 ) {
 		}
 	}
 	put_json( IMPORT_CHECKSUM_DATA, $checksums );
-	echo "<br/>";
+	echo '<br/>';
 	if ( $skipped ) {
 		echo "Skipped $skipped books<br/>";
 	}
@@ -186,6 +193,11 @@ function import_books( $max = 1 ) {
 	return $imported;
 }
 
+/**
+ * @param int $max Maximum updated items per run.
+ *
+ * @return int
+ */
 function update_books( $max = 1 ) {
 	$updated   = 0;
 	$skipped   = 0;
@@ -213,7 +225,7 @@ function update_books( $max = 1 ) {
 		}
 	}
 	put_json( IMPORT_CHECKSUM_DATA, $checksums );
-	echo "<br/>";
+	echo '<br/>';
 	if ( $skipped ) {
 		echo "Skipped $skipped books<br/>";
 	}
