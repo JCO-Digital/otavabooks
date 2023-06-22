@@ -109,9 +109,6 @@ function update_book_meta( $post_id, $item, $tulossa = false ) {
 	// Get the categories.
 	$tags       = array();
 	$categories = array();
-	if ( $tulossa ) {
-		$categories[] = 'tulossa';
-	}
 
 	if ( ! empty( $item['categories'] ) ) {
 		foreach ( $item['categories'] as $category ) {
@@ -171,6 +168,11 @@ function update_book_meta( $post_id, $item, $tulossa = false ) {
 	foreach ( $item['toimittaja'] as $name ) {
 		$toimittaja[] = parse_name( $name );
 		$tags[]       = parse_name( $name );
+	}
+
+	// Add the "tulossa" category last.
+	if ( $tulossa ) {
+		$categories[] = 'tulossa';
 	}
 	wp_set_post_terms( $post_id, $toimittaja, 'otava_toimittaja', false );
 	wp_set_post_terms( $post_id, $tags, 'post_tag', false );

@@ -191,7 +191,7 @@ function get_recent_books_sql( $nr = 64, $page = 0 ) {
 			post.ID,
 			post.post_title,
 			isbn.meta_value as isbn,
-			IF (LENGTH(ilmestymis.meta_value) > 7, str_to_date(ilmestymis.meta_value, '%Y%m%d'), str_to_date(julkaisu.meta_value, '%Y%m%d')) as pvm
+			str_to_date(ilmestymis.meta_value, '%Y%m%d') as pvm
 		FROM wp_posts as post
 		LEFT JOIN wp_postmeta as isbn
 		ON post.ID = isbn.post_id
@@ -199,15 +199,9 @@ function get_recent_books_sql( $nr = 64, $page = 0 ) {
 		LEFT JOIN wp_postmeta as ilmestymis
 		ON post.ID = ilmestymis.post_id
 		AND ilmestymis.meta_key = 'ilmestymispvm'
-		LEFT JOIN wp_postmeta as embargo
-		ON post.ID = embargo.post_id
-		AND embargo.meta_key = 'embargopvm'
-		LEFT JOIN wp_postmeta as julkaisu
-		ON post.ID = julkaisu.post_id
-		AND julkaisu.meta_key = 'julkaisuaika'
 		WHERE post.post_type = 'otava_book'
 		AND post.post_status = 'publish'
-		AND IF (LENGTH(embargo.meta_value) > 7, str_to_date(embargo.meta_value, '%Y%m%d'), IF (LENGTH(ilmestymis.meta_value) > 7, str_to_date(ilmestymis.meta_value, '%Y%m%d'), str_to_date(julkaisu.meta_value, '%Y%m%d'))) < now()
+		AND str_to_date(ilmestymis.meta_value, '%Y%m%d') < now()
 		ORDER BY pvm DESC
 		LIMIT $nr
 		OFFSET $offset
