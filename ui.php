@@ -38,9 +38,11 @@ function show_book_import_page() {
 	}
 
 	// Clean tulossa tags.
-	if ( is_admin() && ! empty( $_GET['cleantulossa'] ) && ctype_digit( $_GET['cleantulossa'] ) ) {
+	if ( is_admin() && ! empty( $_GET['updatetulossa'] ) && ctype_digit( $_GET['updatetulossa'] ) ) {
+		$set = set_tulossa();
+		echo "Set terms to $set books.<br/>";
 		$cleaned = clean_tulossa();
-		echo "Cleaned tags from $cleaned books.";
+		echo "Cleaned terms from $cleaned books.<br/>";
 	}
 
 	// Update One Book.
@@ -113,7 +115,7 @@ function show_book_import_page() {
         </p>';
 		echo '
         <p>
-            <a class="button action" href="?page=book-import&amp;cleantulossa=1">Clean Tulossa</a>
+            <a class="button action" href="?page=book-import&amp;updatetulossa=1">Update Tulossa</a>
         </p>';
 		echo '
         <p>

@@ -50,6 +50,9 @@ function book_import_cron() {
 	$updated = update_books( 10 );
 	echo "Updated $updated books.";
 
+	$set = set_tulossa();
+	echo "Set $set books.";
+
 	$cleaned = clean_tulossa();
 	echo "Cleaned $cleaned books.";
 

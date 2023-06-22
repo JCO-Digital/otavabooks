@@ -19,7 +19,7 @@ function create_book_object( array $item, array $tags = array() ) {
 			'post_status'  => 'publish',
 			'post_author'  => get_author_setting(),
 		);
-		$date     = parse_dates( $new_book, $item );
+		$date     = parse_dates( $new_book, $item['dates'] );
 
 		// Insert the post into the database.
 		$post_id = wp_insert_post( $new_book );
@@ -39,7 +39,7 @@ function create_book_object( array $item, array $tags = array() ) {
 }
 
 /**
- * @param int   $id   The post id.
+ * @param int $id The post id.
  * @param array $item The json data from the import.
  * @param array $tags Optional extra tags.
  *
@@ -51,7 +51,7 @@ function update_book_object( int $id, array $item, array $tags = array() ) {
 		'post_title'   => $item['title'],
 		'post_content' => $item['content'],
 	);
-	$date        = parse_dates( $update_book, $item );
+	$date        = parse_dates( $update_book, $item['dates'] );
 
 	$post_id = wp_update_post( $update_book );
 	if ( ! empty( $post_id ) ) {
@@ -71,15 +71,9 @@ function update_book_object( int $id, array $item, array $tags = array() ) {
  *
  * @return string
  */
-function parse_dates( &$post, $item ) {
+function parse_dates( &$post, $dates ) {
 	// Do the date magic.
-	$date = $item['dates']['vvvvkk'];
-	if ( ! empty( $item['dates']['ilmestymis'] ) ) {
-		$date = $item['dates']['ilmestymis'];
-	}
-	if ( ! empty( $item['dates']['ensimmainen'] ) ) {
-		$date = $item['dates']['ensimmainen'];
-	}
+	$date = $dates['ensimmainen'] ?? ( $dates['ilmestymis'] ?? $dates['vvvvkk'] );
 
 	if ( strlen( $date ) === 8 ) {
 		$date_string = substr( $date, 0, 4 ) . '-' . substr( $date, 4, 2 ) . '-' . substr( $date, 6, 2 );
@@ -102,8 +96,8 @@ function set_ilmestymis( $post_id, $date ) {
 /**
  * Update the meta values for the books.
  *
- * @param int   $post_id The post id.
- * @param array $item    The json data from the import.
+ * @param int $post_id The post id.
+ * @param array $item The json data from the import.
  */
 function update_book_meta( $post_id, $item, $tulossa = false ) {
 	// Get the categories.
@@ -185,7 +179,7 @@ function update_book_meta( $post_id, $item, $tulossa = false ) {
 /**
  * Update the versions for the book.
  *
- * @param $post_id  - the post id.
+ * @param $post_id - the post id.
  * @param $versions - The json data from the import.
  */
 function update_book_versions( $post_id, $versions ) {
@@ -283,6 +277,32 @@ function get_book_covers( $max_delete ) {
 	}
 
 	return $nr;
+}
+
+
+function set_tulossa() {
+	global $wpdb;
+	$sql = "
+		SELECT
+			post.ID,
+			post.post_title,
+            ilmestymis.meta_value as pvm
+		FROM wp_posts as post
+		LEFT JOIN wp_postmeta as ilmestymis
+		ON post.ID = ilmestymis.post_id
+		AND ilmestymis.meta_key = 'ilmestymispvm'
+		WHERE post.post_type = 'otava_book'
+		AND post.post_status = 'publish'
+		AND str_to_date(ilmestymis.meta_value, '%Y%m%d') > now()
+		";
+
+	$set = 0;
+	foreach ( $wpdb->get_results( $sql, ARRAY_A ) as $row ) {
+		wp_set_post_terms( $row['ID'], 'tulossa', 'otava_kategoria', false );
+		$set ++;
+	}
+
+	return $set;
 }
 
 function clean_tulossa() {
