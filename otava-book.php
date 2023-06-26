@@ -25,8 +25,8 @@ function create_book_object( array $item, array $tags = array() ) {
 		$post_id = wp_insert_post( $new_book );
 		if ( ! empty( $post_id ) ) {
 			update_post_meta( $post_id, 'isbn', trim( $item['isbn'] ) );
-			$tulossa = set_ilmestymis( $post_id, $date );
-			update_book_meta( $post_id, $item, $tulossa );
+			set_ilmestymis( $post_id, $date );
+			update_book_meta( $post_id, $item );
 			update_book_versions( $post_id, $item['versions'] );
 
 			return $post_id;
@@ -55,8 +55,8 @@ function update_book_object( int $id, array $item, array $tags = array() ) {
 
 	$post_id = wp_update_post( $update_book );
 	if ( ! empty( $post_id ) ) {
-		$tulossa = set_ilmestymis( $post_id, $date );
-		update_book_meta( $post_id, $item, $tulossa );
+		set_ilmestymis( $post_id, $date );
+		update_book_meta( $post_id, $item );
 		update_book_versions( $post_id, $item['versions'] );
 
 		return $post_id;
@@ -99,7 +99,7 @@ function set_ilmestymis( $post_id, $date ) {
  * @param int $post_id The post id.
  * @param array $item The json data from the import.
  */
-function update_book_meta( $post_id, $item, $tulossa = false ) {
+function update_book_meta( $post_id, $item ) {
 	// Get the categories.
 	$tags       = array();
 	$categories = array();
@@ -164,10 +164,6 @@ function update_book_meta( $post_id, $item, $tulossa = false ) {
 		$tags[]       = parse_name( $name );
 	}
 
-	// Add the "tulossa" category last.
-	if ( $tulossa ) {
-		$categories[] = 'tulossa';
-	}
 	wp_set_post_terms( $post_id, $toimittaja, 'otava_toimittaja', false );
 	wp_set_post_terms( $post_id, $tags, 'post_tag', false );
 	wp_set_post_terms( $post_id, $categories, 'otava_kategoria', false );
