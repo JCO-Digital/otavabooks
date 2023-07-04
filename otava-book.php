@@ -21,17 +21,19 @@ function create_book_object( array $item, array $tags = array() ) {
 		);
 		$date     = parse_dates( $new_book, $item['dates'] );
 
-		// Insert the post into the database.
-		$post_id = wp_insert_post( $new_book );
-		if ( ! empty( $post_id ) ) {
-			update_post_meta( $post_id, 'isbn', trim( $item['isbn'] ) );
-			set_ilmestymis( $post_id, $date );
-			update_book_meta( $post_id, $item );
-			update_book_versions( $post_id, $item['versions'] );
+		if ( ! empty( $date ) ) {
+			// Insert the post into the database.
+			$post_id = wp_insert_post( $new_book );
+			if ( ! empty( $post_id ) ) {
+				update_post_meta( $post_id, 'isbn', trim( $item['isbn'] ) );
+				set_ilmestymis( $post_id, $date );
+				update_book_meta( $post_id, $item );
+				update_book_versions( $post_id, $item['versions'] );
 
-			return $post_id;
-		} else {
-			return false;
+				return $post_id;
+			} else {
+				return false;
+			}
 		}
 	}
 
@@ -39,7 +41,7 @@ function create_book_object( array $item, array $tags = array() ) {
 }
 
 /**
- * @param int $id The post id.
+ * @param int   $id The post id.
  * @param array $item The json data from the import.
  * @param array $tags Optional extra tags.
  *
@@ -53,13 +55,15 @@ function update_book_object( int $id, array $item, array $tags = array() ) {
 	);
 	$date        = parse_dates( $update_book, $item['dates'] );
 
-	$post_id = wp_update_post( $update_book );
-	if ( ! empty( $post_id ) ) {
-		set_ilmestymis( $post_id, $date );
-		update_book_meta( $post_id, $item );
-		update_book_versions( $post_id, $item['versions'] );
+	if ( ! empty( $date ) ) {
+		$post_id = wp_update_post( $update_book );
+		if ( ! empty( $post_id ) ) {
+			set_ilmestymis( $post_id, $date );
+			update_book_meta( $post_id, $item );
+			update_book_versions( $post_id, $item['versions'] );
 
-		return $post_id;
+			return $post_id;
+		}
 	}
 
 	return false;
@@ -73,7 +77,13 @@ function update_book_object( int $id, array $item, array $tags = array() ) {
  */
 function parse_dates( &$post, $dates ) {
 	// Do the date magic.
-	$date = $dates['ensimmainen'] ?? ( $dates['ilmestymis'] ?? $dates['vvvvkk'] );
+	$date = $dates['ensimmainen'];
+	if ( empty( $date ) ) {
+		$date = $dates['ilmestymis'];
+	}
+	if ( empty( $date ) ) {
+		$date = $dates['vvvvkk'];
+	}
 
 	if ( strlen( $date ) === 8 ) {
 		$date_string = substr( $date, 0, 4 ) . '-' . substr( $date, 4, 2 ) . '-' . substr( $date, 6, 2 );
@@ -294,7 +304,7 @@ function set_tulossa() {
 
 	$set = 0;
 	foreach ( $wpdb->get_results( $sql, ARRAY_A ) as $row ) {
-		wp_set_post_terms( $row['ID'], 'tulossa', 'otava_kategoria', false );
+		wp_set_post_terms( $row['ID'], 'tulossa', 'otava_kategoria', true );
 		$set ++;
 	}
 
