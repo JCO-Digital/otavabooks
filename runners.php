@@ -84,7 +84,7 @@ function update_books( $data ) {
 	put_json( IMPORT_CHECKSUM_DATA, $checksums );
 
 	$data['return'] = array(
-		'status' => 'Skipped ' . esc_html( $skipped ) . ' books',
+		'status' => 'Skipped ' . esc_html( $skipped ) . ' of ' . count( $books ) . ' books',
 	);
 
 	if ( empty( $data['next_page'] ) ) {
