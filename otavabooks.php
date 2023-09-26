@@ -20,6 +20,7 @@ require_once 'utility.php';
 
 define( 'IMPORT_POST_TYPE', 'otava_book' );
 define( 'IMPORT_AUTHOR_TYPE', 'otava_author' );
+define( 'IMPORT_RAW_DATA', get_upload_dir() . '/raw_data.json' );
 define( 'IMPORT_BOOK_DATA', get_upload_dir() . '/book_data.json' );
 define( 'IMPORT_TIMESTAMP_DATA', get_upload_dir() . '/timestamp_data.json' );
 define( 'IMPORT_CHECKSUM_DATA', get_upload_dir() . '/checksum_data.json' );
@@ -56,15 +57,27 @@ add_filter(
 	}
 );
 
+add_filter(
+	'jcore_runner_status_status',
+	function ( $content ) {
+		$books     = get_json( IMPORT_BOOK_DATA );
+		$timestamp = file_exists( IMPORT_BOOK_DATA ) ? filemtime( IMPORT_BOOK_DATA ) : 0;
+		return $content . 'Books: ' . count( $books ) . ' Imported at ' . date( 'Y-m-d H:i:s', $timestamp );
+	}
+);
 
 add_filter(
 	'jcore_runner_functions',
 	function ( $functions ) {
-		$functions['import'] = array(
+		$functions['fetch']  = array(
+			'title'    => 'Fetch Data',
+			'callback' => '\otavabooks\fetch_book_data',
+		);
+		$functions['import']  = array(
 			'title'    => 'Import Books',
 			'callback' => '\otavabooks\import_books',
 		);
-		$functions['update'] = array(
+		$functions['update']  = array(
 			'title'    => 'Update Books',
 			'callback' => '\otavabooks\update_books',
 		);
@@ -72,7 +85,7 @@ add_filter(
 			'title'    => 'Update Tulossa',
 			'callback' => '\otavabooks\update_tulossa',
 		);
-		$functions['delete'] = array(
+		$functions['delete']  = array(
 			'title'    => 'Delete Old Books',
 			'callback' => '\otavabooks\delete_books',
 		);
@@ -80,7 +93,6 @@ add_filter(
 		return $functions;
 	}
 );
-
 
 /**
  * Adds menu to WP Admin

@@ -5,7 +5,8 @@ namespace otavabooks;
 /**
  * @param int $max Maximum imported items per run.
  */
-function import_books( $max = 1 ): int {
+function import_books( $data ): array {
+	$max       = $data['max'] ?? 5;
 	$imported  = 0;
 	$skipped   = 0;
 	$failed    = 0;
@@ -29,19 +30,22 @@ function import_books( $max = 1 ): int {
 			++$skipped;
 		}
 		if ( $imported >= $max ) {
+			$data['next_page'] = $data['page'] + 1;
 			break;
 		}
 	}
 	put_json( IMPORT_CHECKSUM_DATA, $checksums );
-	echo '<br/>';
-	if ( $skipped ) {
-		echo "Skipped $skipped books<br/>";
-	}
-	if ( $failed ) {
-		echo "Failed to import $failed books<br/>";
+	if ( empty( $data['next_page'] ) ) {
+		echo "\n";
+		if ( $skipped ) {
+			echo "Skipped $skipped books<br/>";
+		}
+		if ( $failed ) {
+			echo "Failed to import $failed books<br/>";
+		}
 	}
 
-	return $imported;
+	return $data;
 }
 
 /**
@@ -57,7 +61,6 @@ function update_books( $data ) {
 	$isbn      = get_isbn_list();
 	$books     = get_json( IMPORT_BOOK_DATA );
 	$checksums = get_json( IMPORT_CHECKSUM_DATA );
-	$return    = array();
 
 	foreach ( $books as $book ) {
 		$post_id = array_search( $book['isbn'], $isbn, true );
@@ -74,13 +77,13 @@ function update_books( $data ) {
 			++$skipped;
 		}
 		if ( $updated >= $max ) {
-			$return['next_page'] = $data['page'] + 1;
+			$data['next_page'] = $data['page'] + 1;
 			break;
 		}
 	}
 	put_json( IMPORT_CHECKSUM_DATA, $checksums );
 
-	if ( empty( $return['next_page'] ) ) {
+	if ( empty( $data['next_page'] ) ) {
 		echo "\n";
 		if ( $skipped ) {
 			echo 'Skipped ' . esc_html( $skipped ) . " books\n";
@@ -90,7 +93,7 @@ function update_books( $data ) {
 		}
 	}
 
-	return $return;
+	return $data;
 }
 
 function update_book( $isbn ) {
@@ -147,6 +150,23 @@ function delete_books( $data ) {
 			}
 		}
 	}
+
+	return $data;
+}
+
+function fetch_book_data( $data ) {
+	$books = array();
+	// $books = make_book_list();
+	// $json  = wp_json_encode( $books );
+	// file_put_contents( IMPORT_BOOK_DATA, $json );
+	$timestamp = time();
+	$text      = 'Books: ' . count( $books ) . ' Imported at ' . date( 'Y-m-d H:i:s', $timestamp );
+
+	echo esc_html( $text );
+
+	$data['return'] = array(
+		'status' => $text,
+	);
 
 	return $data;
 }

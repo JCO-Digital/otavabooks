@@ -6,6 +6,9 @@ use Nicebooks\Isbn\Exception\InvalidIsbnException;
 use Nicebooks\Isbn\Isbn;
 use Nicebooks\Isbn\IsbnTools;
 
+use JsonStreamingParser\Listener\InMemoryListener;
+use JsonStreamingParser\Parser;
+
 /**
  * Generate the list of books.
  *
@@ -16,11 +19,11 @@ function make_book_list() {
 	$data       = array();
 	$publishers = get_publishers_setting();
 	foreach ( get_import_data() as $row ) {
-		if ( isset( $row->kantanumero ) && in_array( strtolower( $row->tulosyksikko ), $publishers, true ) && $tools->isValidIsbn( $row->isbn ) ) {
+		if ( isset( $row['kantanumero'] ) && in_array( strtolower( $row['tulosyksikko'] ), $publishers, true ) && $tools->isValidIsbn( $row['isbn'] ) ) {
 			try {
-				$isbn   = Isbn::of( $row->isbn );
-				$master = 'Kyllä' === $row->master_tuote;
-				$id     = $row->kantanumero;
+				$isbn   = Isbn::of( $row['isbn'] );
+				$master = 'Kyllä' === $row['master_tuote'];
+				$id     = $row['kantanumero'];
 				// Get the book, or create an empty object if not exists.
 				$book = $data[ $id ] ?? array(
 					'categories' => array(),
@@ -31,13 +34,13 @@ function make_book_list() {
 				if ( $master ) {
 					// If product is master, create the real book object.
 					$book = add_book( $row, $isbn->format(), $book['categories'], $book['versions'], $book['timestamp'] );
-				} elseif ( $row->muutosaikaleima > $book['timestamp'] ) {
+				} elseif ( $row['muutosaikaleima'] > $book['timestamp'] ) {
 					// If not master, check if timestamp needs to be updated.
-					$book['timestamp'] = $row->muutosaikaleima;
+					$book['timestamp'] = $row['muutosaikaleima'];
 				}
 
 				// Push current product onto version stack.
-				$cat = get_otava_cat( $row->tuoteryhma );
+				$cat = get_otava_cat( $row['tuoteryhma'] );
 				if ( ! empty( $cat ) ) {
 					array_push( $book['categories'], $cat );
 				}
@@ -63,13 +66,13 @@ function make_book_list() {
 }
 
 function add_version( $isbn, $row ) {
-	$asu = explode( ' ', $row->asu, 2 );
+	$asu = explode( ' ', $row['asu'], 2 );
 
 	return array(
 		'isbn'       => $isbn,
-		'tuotemuoto' => $row->tuotemuoto,
-		'tyyppi'     => $row->tyyppi,
-		'pages'      => $row->laajus_sivua,
+		'tuotemuoto' => $row['tuotemuoto'],
+		'tyyppi'     => $row['tyyppi'],
+		'pages'      => $row['laajus_sivua'],
 		'asu_code'   => $asu[0],
 		'asu_text'   => $asu[1],
 	);
@@ -77,7 +80,7 @@ function add_version( $isbn, $row ) {
 
 function add_book( $row, $isbn, $categories = array(), $versions = array(), $timestamp = 0 ) {
 	$thema = array();
-	foreach ( array( $row->thema_1, $row->thema_2, $row->thema_3 ) as $item ) {
+	foreach ( array( $row['thema_1'], $row['thema_2'], $row['thema_3'] ) as $item ) {
 		if ( preg_match( '/([A-Z]+) (.*)/', $item, $match ) ) {
 			$thema[ $match[1] ] = $match[2];
 		}
@@ -85,30 +88,30 @@ function add_book( $row, $isbn, $categories = array(), $versions = array(), $tim
 
 	return array(
 		'isbn'           => $isbn,
-		'title'          => wp_strip_all_tags( $row->onix_tuotenimi ),
-		'sub_title'      => wp_strip_all_tags( $row->alaotsikko ),
-		'content'        => $row->markkinointiteksti,
-		'authors'        => parse_list( $row->kirjantekija ),
-		'kuvittaja'      => parse_list( $row->kuvittaja ),
-		'suomentaja'     => parse_list( $row->suomentaja ),
-		'toimittaja'     => parse_list( $row->toimittaja ),
+		'title'          => wp_strip_all_tags( $row['onix_tuotenimi'] ),
+		'sub_title'      => wp_strip_all_tags( $row['alaotsikko'] ),
+		'content'        => $row['markkinointiteksti'],
+		'authors'        => parse_list( $row['kirjantekija'] ),
+		'kuvittaja'      => parse_list( $row['kuvittaja'] ),
+		'suomentaja'     => parse_list( $row['suomentaja'] ),
+		'toimittaja'     => parse_list( $row['toimittaja'] ),
 		'categories'     => $categories,
-		'tulosyksikko'   => $row->tulosyksikko ?? 'otava',
-		'alkuteos'       => $row->alkuteos,
-		'kirjastoluokka' => $row->kirjastoluokka,
-		'sarja'          => $row->sarja ?? '',
-		'kausi'          => $row->kausi,
+		'tulosyksikko'   => $row['tulosyksikko'] ?? 'otava',
+		'alkuteos'       => $row['alkuteos'],
+		'kirjastoluokka' => $row['kirjastoluokka'],
+		'sarja'          => $row['sarja'] ?? '',
+		'kausi'          => $row['kausi'],
 		'dates'          => array(
-			'ensimmainen'      => $row->ensimmainenilmestymispvm,
-			'vvvvkk'           => $row->ilmestymis_vvvvkk . '01',
-			'ilmestymis'       => $row->ilmestymispvm,
-			'embargo'          => $row->embargopvm,
-			'yleiseenmyyntiin' => $row->yleiseenmyyntiinpvm,
+			'ensimmainen'      => $row['ensimmainenilmestymispvm'],
+			'vvvvkk'           => $row['ilmestymis_vvvvkk'] . '01',
+			'ilmestymis'       => $row['ilmestymispvm'],
+			'embargo'          => $row['embargopvm'],
+			'yleiseenmyyntiin' => $row['yleiseenmyyntiinpvm'],
 		),
 		'thema'          => $thema,
-		'keywords'       => parse_list( $row->avainsanat ),
+		'keywords'       => parse_list( $row['avainsanat'] ),
 		'versions'       => $versions,
-		'timestamp'      => $row->muutosaikaleima,
+		'timestamp'      => $row['muutosaikaleima'],
 	);
 }
 
@@ -136,12 +139,28 @@ function get_import_data() {
 	if ( $start > 0 ) {
 		$data = substr( $data, $start );
 	}
+
 	if ( ! empty( $data ) ) {
 		// Replace ¤¤¤¤¤ with newlines.
 		$data = str_replace( '¤¤¤¤¤', '\\n', $data );
 
+		// Write the raw json to disk.
+		file_put_contents( IMPORT_RAW_DATA, $data );
+
+		$stream   = fopen( IMPORT_RAW_DATA, 'r' );
+		$listener = new InMemoryListener();
+		try {
+			$parser = new Parser( $stream, $listener );
+			$parser->parse();
+			fclose( $stream );
+		} catch ( Exception $e ) {
+			fclose( $stream );
+			throw $e;
+		}
+
 		// Parse JSON.
-		$parsed_data = json_decode( $data, null, 512, JSON_INVALID_UTF8_SUBSTITUTE );
+		$parsed_data = $listener->getJson();
+
 		if ( ! empty( $parsed_data ) && is_array( $parsed_data ) ) {
 			return $parsed_data;
 		}

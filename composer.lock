@@ -4,20 +4,20 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "ee173f0718a669a7698efa66fad21f66",
+    "content-hash": "404e9ff1470b21780043b4fc15953718",
     "packages": [
         {
             "name": "nicebooks/isbn",
-            "version": "0.3.6",
+            "version": "0.3.48",
             "source": {
                 "type": "git",
                 "url": "https://github.com/nicebooks-com/isbn.git",
-                "reference": "8860f19bb7ec438b831e3f20f36637443440ca9b"
+                "reference": "e1e6fdc778a990788b5c62c76df68b547a3981de"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/nicebooks-com/isbn/zipball/8860f19bb7ec438b831e3f20f36637443440ca9b",
-                "reference": "8860f19bb7ec438b831e3f20f36637443440ca9b",
+                "url": "https://api.github.com/repos/nicebooks-com/isbn/zipball/e1e6fdc778a990788b5c62c76df68b547a3981de",
+                "reference": "e1e6fdc778a990788b5c62c76df68b547a3981de",
                 "shasum": ""
             },
             "require": {
@@ -26,7 +26,7 @@
             "require-dev": {
                 "brick/varexporter": "~0.3.0",
                 "ext-dom": "*",
-                "php-coveralls/php-coveralls": "^2.0",
+                "php-coveralls/php-coveralls": "^2.5.2",
                 "phpunit/phpunit": "^9.0",
                 "vimeo/psalm": "^4.8"
             },
@@ -51,9 +51,81 @@
             ],
             "support": {
                 "issues": "https://github.com/nicebooks-com/isbn/issues",
-                "source": "https://github.com/nicebooks-com/isbn/tree/0.3.6"
+                "source": "https://github.com/nicebooks-com/isbn/tree/0.3.48"
             },
-            "time": "2021-10-28T21:36:45+00:00"
+            "time": "2023-06-07T17:06:56+00:00"
+        },
+        {
+            "name": "salsify/json-streaming-parser",
+            "version": "v8.3.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/salsify/jsonstreamingparser.git",
+                "reference": "c0cfac990eb4e917c71b0ad0146546f0a4da0c2f"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/salsify/jsonstreamingparser/zipball/c0cfac990eb4e917c71b0ad0146546f0a4da0c2f",
+                "reference": "c0cfac990eb4e917c71b0ad0146546f0a4da0c2f",
+                "shasum": ""
+            },
+            "require": {
+                "ext-ctype": "*",
+                "ext-mbstring": "*",
+                "php": ">=7.1"
+            },
+            "require-dev": {
+                "ext-json": "*",
+                "phpunit/phpunit": "~9.6"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "8.0-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "JsonStreamingParser\\": "src",
+                    "JsonStreamingParser\\Test\\": "tests"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Rob Gonzalez",
+                    "email": "rob@salsify.com",
+                    "homepage": "http://salsify.com/"
+                },
+                {
+                    "name": "Maxim Gnatenko",
+                    "email": "mgnatenko@gmail.com"
+                },
+                {
+                    "name": "Max Grigorian",
+                    "email": "maxakawizard@gmail.com",
+                    "homepage": "http://wizardcat.com/"
+                },
+                {
+                    "name": "ThePanz",
+                    "email": "thepanz@gmail.com"
+                }
+            ],
+            "description": "A streaming parser for JSON in PHP.",
+            "homepage": "https://github.com/salsify/jsonstreamingparser",
+            "keywords": [
+                "json",
+                "parser",
+                "streaming"
+            ],
+            "support": {
+                "issues": "https://github.com/salsify/jsonstreamingparser/issues",
+                "source": "https://github.com/salsify/jsonstreamingparser/tree/v8.3.1"
+            },
+            "time": "2023-05-09T10:37:49+00:00"
         }
     ],
     "packages-dev": [],
@@ -64,5 +136,5 @@
     "prefer-lowest": false,
     "platform": [],
     "platform-dev": [],
-    "plugin-api-version": "2.1.0"
+    "plugin-api-version": "2.6.0"
 }

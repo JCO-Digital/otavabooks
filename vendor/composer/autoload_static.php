@@ -11,12 +11,25 @@ class ComposerStaticInit8411e2365c7741c78a086888bc673992
         array (
             'Nicebooks\\Isbn\\' => 15,
         ),
+        'J' => 
+        array (
+            'JsonStreamingParser\\Test\\' => 25,
+            'JsonStreamingParser\\' => 20,
+        ),
     );
 
     public static $prefixDirsPsr4 = array (
         'Nicebooks\\Isbn\\' => 
         array (
             0 => __DIR__ . '/..' . '/nicebooks/isbn/src',
+        ),
+        'JsonStreamingParser\\Test\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/salsify/json-streaming-parser/tests',
+        ),
+        'JsonStreamingParser\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/salsify/json-streaming-parser/src',
         ),
     );
 

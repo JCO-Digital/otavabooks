@@ -1,5 +1,6 @@
 {
     "require": {
-        "nicebooks/isbn": "^0.3.6"
+        "nicebooks/isbn": "^0.3.6",
+        "salsify/json-streaming-parser": "^8.3"
     }
 }

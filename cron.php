@@ -44,10 +44,10 @@ function book_import_cron() {
 		echo 'Fetched file.';
 	}
 
-	$imported = import_books( 10 );
+	$imported = import_books( array( 'max' => 10 ) );
 	echo "Imported $imported books.";
 
-	$updated = update_books( 10 );
+	$updated = update_books( array( 'max' => 10 ) );
 	echo "Updated $updated books.";
 
 	$set = set_tulossa();
@@ -55,7 +55,6 @@ function book_import_cron() {
 
 	$cleaned = clean_tulossa();
 	echo "Cleaned $cleaned books.";
-
 }
 
 /**
@@ -85,7 +84,7 @@ function cover_check_cron() {
 	 */
 
 	do {
-		$books = get_recent_books_sql( $books_per_page, $page ++ );
+		$books = get_recent_books_sql( $books_per_page, $page++ );
 		if ( empty( $books ) ) {
 			break;
 		}
@@ -106,7 +105,7 @@ function cover_check_cron() {
 				( time() - $covers[ $isbn ]['timestamp'] ) < ( 24 * 60 * 60 )
 			) {
 				echo "<p>Found already checked book with isbn: $isbn</p>\n";
-				$skipped ++;
+				++$skipped;
 				$covers[ $isbn ]['pvm']     = $book['pvm'];
 				$covers[ $isbn ]['updated'] = $update_ts;
 				if ( $covers[ $isbn ]['has_cover'] ) {
@@ -132,7 +131,7 @@ function cover_check_cron() {
 				continue;
 			}
 
-			$checked ++;
+			++$checked;
 			echo '<p>Checking ' . $isbn . ' with response: ' . wp_remote_retrieve_response_code( $response ) . '</p>';
 
 			$has_cover = wp_remote_retrieve_response_code( $response ) === 200;
@@ -181,7 +180,7 @@ function cover_check_cron() {
 
 function get_recent_books_sql( $nr = 64, $page = 0 ) {
 	if ( ! is_int( $nr ) || ! is_int( $page ) ) {
-		echo "Malformed arguments!";
+		echo 'Malformed arguments!';
 
 		return array();
 	}
