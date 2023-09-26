@@ -31,15 +31,16 @@ function make_book_list() {
 				if ( $master ) {
 					// If product is master, create the real book object.
 					$book = add_book( $row, $isbn->format(), $book['categories'], $book['versions'], $book['timestamp'] );
-				} else {
+				} elseif ( $row->muutosaikaleima > $book['timestamp'] ) {
 					// If not master, check if timestamp needs to be updated.
-					if ( $row->muutosaikaleima > $book['timestamp'] ) {
-						$book['timestamp'] = $row->muutosaikaleima;
-					}
+					$book['timestamp'] = $row->muutosaikaleima;
 				}
 
 				// Push current product onto version stack.
-				array_push( $book['categories'], get_otava_cat( $row->tuoteryhma ) );
+				$cat = get_otava_cat( $row->tuoteryhma );
+				if ( ! empty( $cat ) ) {
+					array_push( $book['categories'], $cat );
+				}
 				// Push current product onto version stack.
 				array_push( $book['versions'], add_version( $isbn->format(), $row ) );
 				// Write/overwrite book into array.
@@ -51,7 +52,7 @@ function make_book_list() {
 		}
 	}
 	foreach ( $data as $id => &$book ) {
-		if ( empty( $book['isbn'] ) ) {
+		if ( empty( $book['isbn'] ) || empty( $book['categories'] ) ) {
 			unset( $data[ $id ] );
 		} else {
 			$book['checksum'] = md5( wp_json_encode( $book ) );
@@ -151,111 +152,6 @@ function get_import_data() {
 	return array();
 }
 
-/**
- * @param int $max Maximum imported items per run.
- */
-function import_books( $max = 1 ): int {
-	$imported  = 0;
-	$skipped   = 0;
-	$failed    = 0;
-	$isbn      = get_isbn_list();
-	$books     = get_json( IMPORT_BOOK_DATA );
-	$checksums = get_json( IMPORT_CHECKSUM_DATA );
-
-	foreach ( $books as $id => $book ) {
-		if ( ! in_array( $book['isbn'], $isbn, true ) ) {
-			$id = create_book_object( $book );
-			if ( $id ) {
-				echo "Imported: $book[title]<br/>\n";
-				$checksums[ $book['isbn'] ] = $book['checksum'];
-				$imported ++;
-			} elseif ( is_null( $id ) ) {
-				$skipped ++;
-			} else {
-				$failed ++;
-			}
-		} else {
-			$skipped ++;
-		}
-		if ( $imported >= $max ) {
-			break;
-		}
-	}
-	put_json( IMPORT_CHECKSUM_DATA, $checksums );
-	echo '<br/>';
-	if ( $skipped ) {
-		echo "Skipped $skipped books<br/>";
-	}
-	if ( $failed ) {
-		echo "Failed to import $failed books<br/>";
-	}
-
-	return $imported;
-}
-
-/**
- * @param int $max Maximum updated items per run.
- *
- * @return int
- */
-function update_books( $max = 1 ) {
-	$updated   = 0;
-	$skipped   = 0;
-	$failed    = 0;
-	$isbn      = get_isbn_list();
-	$books     = get_json( IMPORT_BOOK_DATA );
-	$checksums = get_json( IMPORT_CHECKSUM_DATA );
-
-	foreach ( $books as $book ) {
-		$post_id = array_search( $book['isbn'], $isbn, true );
-		if ( false !== $post_id && ( empty( $checksums[ $book['isbn'] ] ) || $checksums[ $book['isbn'] ] !== $book['checksum'] ) ) {
-			$id = update_book_object( $post_id, $book );
-			if ( false === $id ) {
-				$failed ++;
-			} else {
-				echo "Updated: $book[title]<br/>\n";
-				$checksums[ $book['isbn'] ] = $book['checksum'];
-				$updated ++;
-			}
-		} else {
-			$skipped ++;
-		}
-		if ( $updated >= $max ) {
-			break;
-		}
-	}
-	put_json( IMPORT_CHECKSUM_DATA, $checksums );
-	echo '<br/>';
-	if ( $skipped ) {
-		echo "Skipped $skipped books<br/>";
-	}
-	if ( $failed ) {
-		echo "Failed to update $failed books<br/>";
-	}
-
-	return $updated;
-}
-
-function update_book( $isbn ) {
-	$isbns     = get_isbn_list();
-	$books     = get_json( IMPORT_BOOK_DATA );
-	$checksums = get_json( IMPORT_CHECKSUM_DATA );
-	foreach ( $books as $book ) {
-		if ( $book['isbn'] === $isbn ) {
-			$post_id = array_search( $book['isbn'], $isbns, true );
-			if ( false !== $post_id ) {
-				$id = update_book_object( $post_id, $book );
-				if ( false === $id ) {
-					echo 'Failed';
-				} else {
-					echo "Updated: $book[title]<br/>\n";
-					$checksums[ $book['isbn'] ] = $book['checksum'];
-				}
-			}
-		}
-	}
-	put_json( IMPORT_CHECKSUM_DATA, $checksums );
-}
 
 if ( ! function_exists( 'write_log' ) ) {
 	function write_log( $log ) {

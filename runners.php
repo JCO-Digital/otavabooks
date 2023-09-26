@@ -1,0 +1,152 @@
+<?php
+
+namespace otavabooks;
+
+/**
+ * @param int $max Maximum imported items per run.
+ */
+function import_books( $max = 1 ): int {
+	$imported  = 0;
+	$skipped   = 0;
+	$failed    = 0;
+	$isbn      = get_isbn_list();
+	$books     = get_json( IMPORT_BOOK_DATA );
+	$checksums = get_json( IMPORT_CHECKSUM_DATA );
+
+	foreach ( $books as $id => $book ) {
+		if ( ! in_array( $book['isbn'], $isbn, true ) ) {
+			$id = create_book_object( $book );
+			if ( $id ) {
+				echo "Imported: $book[title]<br/>\n";
+				$checksums[ $book['isbn'] ] = $book['checksum'];
+				++$imported;
+			} elseif ( is_null( $id ) ) {
+				++$skipped;
+			} else {
+				++$failed;
+			}
+		} else {
+			++$skipped;
+		}
+		if ( $imported >= $max ) {
+			break;
+		}
+	}
+	put_json( IMPORT_CHECKSUM_DATA, $checksums );
+	echo '<br/>';
+	if ( $skipped ) {
+		echo "Skipped $skipped books<br/>";
+	}
+	if ( $failed ) {
+		echo "Failed to import $failed books<br/>";
+	}
+
+	return $imported;
+}
+
+/**
+ * @param int $max Maximum updated items per run.
+ *
+ * @return int
+ */
+function update_books( $data ) {
+	$max       = $data['max'] ?? 5;
+	$updated   = 0;
+	$skipped   = 0;
+	$failed    = 0;
+	$isbn      = get_isbn_list();
+	$books     = get_json( IMPORT_BOOK_DATA );
+	$checksums = get_json( IMPORT_CHECKSUM_DATA );
+	$return    = array();
+
+	foreach ( $books as $book ) {
+		$post_id = array_search( $book['isbn'], $isbn, true );
+		if ( false !== $post_id && ( empty( $checksums[ $book['isbn'] ] ) || $checksums[ $book['isbn'] ] !== $book['checksum'] ) ) {
+			$id = update_book_object( $post_id, $book );
+			if ( false === $id ) {
+				++$failed;
+			} else {
+				echo 'Updated: ' . esc_html( $book['title'] ) . "\n";
+				$checksums[ $book['isbn'] ] = $book['checksum'];
+				++$updated;
+			}
+		} else {
+			++$skipped;
+		}
+		if ( $updated >= $max ) {
+			$return['next_page'] = $data['page'] + 1;
+			break;
+		}
+	}
+	put_json( IMPORT_CHECKSUM_DATA, $checksums );
+
+	if ( empty( $return['next_page'] ) ) {
+		echo "\n";
+		if ( $skipped ) {
+			echo 'Skipped ' . esc_html( $skipped ) . " books\n";
+		}
+		if ( $failed ) {
+			echo 'Failed to update ' . esc_html( $failed ) . " books\n";
+		}
+	}
+
+	return $return;
+}
+
+function update_book( $isbn ) {
+	$isbns     = get_isbn_list();
+	$books     = get_json( IMPORT_BOOK_DATA );
+	$checksums = get_json( IMPORT_CHECKSUM_DATA );
+	foreach ( $books as $book ) {
+		if ( $book['isbn'] === $isbn ) {
+			$post_id = array_search( $book['isbn'], $isbns, true );
+			if ( false !== $post_id ) {
+				$id = update_book_object( $post_id, $book );
+				if ( false === $id ) {
+					echo 'Failed';
+				} else {
+					echo "Updated: $book[title]<br/>\n";
+					$checksums[ $book['isbn'] ] = $book['checksum'];
+				}
+			}
+		}
+	}
+	put_json( IMPORT_CHECKSUM_DATA, $checksums );
+}
+
+function update_tulossa( $data ) {
+	$set = set_tulossa();
+	echo 'Set terms to ' . esc_html( $set ) . " books.\n";
+	$cleaned = clean_tulossa();
+	echo 'Cleaned terms from ' . esc_html( $cleaned ) . " books.\n";
+
+	return $data;
+}
+
+function delete_books( $data ) {
+	$max     = $data['max'] ?? 25;
+	$deleted = 0;
+	$isbns   = get_isbn_list();
+	$books   = get_json( IMPORT_BOOK_DATA );
+	$feed    = array();
+	foreach ( $books as $book ) {
+		$feed[] = $book['isbn'];
+	}
+
+	foreach ( $isbns as $id => $isbn ) {
+		if ( ! in_array( $isbn, $feed, true ) ) {
+			if ( wp_delete_post( $id ) ) {
+				++$deleted;
+				echo esc_html( $isbn ) . ' / ' . esc_html( $id ) . " deleted\n";
+			} else {
+				echo 'Failed to delete ' . esc_html( $id ) . "\n";
+			}
+			if ( $deleted >= $max ) {
+				$data['next_page'] = $data['page'] + 1;
+				break;
+			}
+		}
+	}
+
+	return $data;
+}

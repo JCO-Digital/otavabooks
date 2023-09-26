@@ -41,7 +41,7 @@ function create_book_object( array $item, array $tags = array() ) {
 }
 
 /**
- * @param int   $id The post id.
+ * @param int   $id   The post id.
  * @param array $item The json data from the import.
  * @param array $tags Optional extra tags.
  *
@@ -89,6 +89,10 @@ function parse_dates( &$post, $dates ) {
 		$date_string = substr( $date, 0, 4 ) . '-' . substr( $date, 4, 2 ) . '-' . substr( $date, 6, 2 );
 		if ( strtotime( $date_string ) < time() ) {
 			$post['post_date'] = $date_string . ' 00:00:00';
+		} else {
+			$datetime = new \DateTime( $date_string );
+			$datetime->modify( '+6 months' );
+			$post['post_date'] = $datetime->format( 'Y-m-d H:i:s' );
 		}
 	}
 
@@ -106,8 +110,8 @@ function set_ilmestymis( $post_id, $date ) {
 /**
  * Update the meta values for the books.
  *
- * @param int $post_id The post id.
- * @param array $item The json data from the import.
+ * @param int   $post_id The post id.
+ * @param array $item    The json data from the import.
  */
 function update_book_meta( $post_id, $item ) {
 	// Get the categories.
@@ -185,7 +189,7 @@ function update_book_meta( $post_id, $item ) {
 /**
  * Update the versions for the book.
  *
- * @param $post_id - the post id.
+ * @param $post_id  - the post id.
  * @param $versions - The json data from the import.
  */
 function update_book_versions( $post_id, $versions ) {
@@ -215,7 +219,7 @@ function get_books() {
 }
 
 $categories = get_json( __DIR__ . '/categories.json' );
-function get_otava_cat( $raw, $default = 'Muut' ) {
+function get_otava_cat( $raw, $default = '' ) {
 	if ( get_disable_categories_setting() ) {
 		return $raw;
 	}
@@ -249,7 +253,7 @@ function get_otava_cat( $raw, $default = 'Muut' ) {
 /**
  * Changes the name into firstname lastname format.
  *
- * @param $name
+ * @param string $name Name to process.
  *
  * @return mixed|string
  */
@@ -264,18 +268,20 @@ function parse_name( $name ) {
 
 function get_book_covers( $max_delete ) {
 	$nr          = 0;
-	$attachments = get_posts( array(
-		'post_type'      => 'attachment',
-		'posts_per_page' => - 1,
-	) );
+	$attachments = get_posts(
+		array(
+			'post_type'      => 'attachment',
+			'posts_per_page' => - 1,
+		)
+	);
 	$count       = count( $attachments );
-	echo "Found $count covers<br/>\n";
+	echo esc_html( "Found $count covers\n" );
 	foreach ( $attachments as $attachment ) {
 		if ( strpos( $attachment->guid, '/wp-content/uploads/isbn' ) !== false ) {
 			if ( empty( $attachment->post_parent ) ) {
 				wp_delete_attachment( $attachment->ID, true );
-				if ( ++ $nr >= $max_delete ) {
-					echo "Max reached";
+				if ( ++$nr >= $max_delete ) {
+					echo 'Max reached';
 					break;
 				}
 			}
@@ -284,7 +290,6 @@ function get_book_covers( $max_delete ) {
 
 	return $nr;
 }
-
 
 function set_tulossa() {
 	global $wpdb;
@@ -305,7 +310,7 @@ function set_tulossa() {
 	$set = 0;
 	foreach ( $wpdb->get_results( $sql, ARRAY_A ) as $row ) {
 		wp_set_post_terms( $row['ID'], 'tulossa', 'otava_kategoria', true );
-		$set ++;
+		++$set;
 	}
 
 	return $set;
@@ -327,7 +332,7 @@ function clean_tulossa() {
 	foreach ( get_posts( $args ) as $post ) {
 		$date = get_field( 'ilmestymispvm', $post->ID );
 		if ( strtotime( $date ) < time() ) {
-			$cleaned ++;
+			++$cleaned;
 			wp_remove_object_terms( $post->ID, 'tulossa', 'otava_kategoria' );
 			echo "Cleaned {$post->post_title}.<br/>";
 		}

@@ -2,6 +2,7 @@
 
 namespace otavabooks;
 
+
 /**
  * Main function hooked to the tools menu.
  */
@@ -17,32 +18,6 @@ function show_book_import_page() {
 		$json  = wp_json_encode( $books );
 		file_put_contents( IMPORT_BOOK_DATA, $json );
 		$timestamp = time();
-	}
-
-	// Import Books.
-	if ( is_admin() && ! empty( $_GET['bookimport'] ) && ctype_digit( $_GET['bookimport'] ) ) {
-		$imported = import_books( $_GET['bookimport'] );
-		if ( $imported == $_GET['bookimport'] && ! empty( $_GET['reload'] ) ) {
-			$update_page = true;
-		}
-		echo "Imported $imported books.";
-	}
-
-	// Update Books.
-	if ( is_admin() && ! empty( $_GET['bookupdate'] ) && ctype_digit( $_GET['bookupdate'] ) ) {
-		$updated = update_books( $_GET['bookupdate'] );
-		if ( $updated == $_GET['bookupdate'] && ! empty( $_GET['reload'] ) ) {
-			$update_page = true;
-		}
-		echo "Updated $updated books.";
-	}
-
-	// Clean tulossa tags.
-	if ( is_admin() && ! empty( $_GET['updatetulossa'] ) && ctype_digit( $_GET['updatetulossa'] ) ) {
-		$set = set_tulossa();
-		echo "Set terms to $set books.<br/>";
-		$cleaned = clean_tulossa();
-		echo "Cleaned terms from $cleaned books.<br/>";
 	}
 
 	// Update One Book.
@@ -99,24 +74,8 @@ function show_book_import_page() {
         </p>';
 
 	if ( ! empty( $books ) ) {
-		echo "Books: " . count( $books ) . "<br/>";
-		echo "Imported at " . date( 'Y-m-d H:i:s', $timestamp ) . "<br/>";
-		echo '
-        <p>
-            <a class="button action" href="?page=book-import&amp;bookimport=1">Import Book</a>
-            <a class="button action" href="?page=book-import&amp;bookimport=10">Import 10 Books</a>
-            <a class="button action" href="?page=book-import&amp;bookimport=10&amp;reload=1">Import All Books</a>
-        </p>';
-		echo '
-        <p>
-            <a class="button action" href="?page=book-import&amp;bookupdate=1">Update Book</a>
-            <a class="button action" href="?page=book-import&amp;bookupdate=10">Update 10 Books</a>
-            <a class="button action" href="?page=book-import&amp;bookupdate=10&amp;reload=1">Update All Books</a>
-        </p>';
-		echo '
-        <p>
-            <a class="button action" href="?page=book-import&amp;updatetulossa=1">Update Tulossa</a>
-        </p>';
+		echo 'Books: ' . count( $books ) . '<br/>';
+		echo 'Imported at ' . date( 'Y-m-d H:i:s', $timestamp ) . '<br/>';
 		echo '
         <p>
             <a class="button action" href="?page=book-import&amp;resetupdate=1" onclick="return confirm(\'Are you sure?\');">Reset Update Timestamps</a>
