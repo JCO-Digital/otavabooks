@@ -122,10 +122,10 @@ function update_book( $isbn ) {
 }
 
 function update_tulossa( $data ) {
-	$set = set_tulossa();
-	echo 'Set terms to ' . esc_html( $set ) . " books.\n";
 	$cleaned = clean_tulossa();
 	echo 'Cleaned terms from ' . esc_html( $cleaned ) . " books.\n";
+	$set = set_tulossa();
+	echo 'Set terms to ' . esc_html( $set ) . " books.\n";
 
 	return $data;
 }

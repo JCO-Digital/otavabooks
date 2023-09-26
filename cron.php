@@ -44,17 +44,13 @@ function book_import_cron() {
 		echo 'Fetched file.';
 	}
 
-	$imported = import_books( array( 'max' => 10 ) );
-	echo "Imported $imported books.";
+	import_books( array( 'max' => 10 ) );
 
-	$updated = update_books( array( 'max' => 10 ) );
-	echo "Updated $updated books.";
+	update_books( array( 'max' => 10 ) );
 
-	$set = set_tulossa();
-	echo "Set $set books.";
+	clean_tulossa();
 
-	$cleaned = clean_tulossa();
-	echo "Cleaned $cleaned books.";
+	set_tulossa();
 }
 
 /**
