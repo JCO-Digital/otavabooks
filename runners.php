@@ -49,9 +49,9 @@ function import_books( $data ): array {
 }
 
 /**
- * @param int $max Maximum updated items per run.
+ * @param array $max Maximum updated items per run.
  *
- * @return int
+ * @return array
  */
 function update_books( $data ) {
 	$max       = $data['max'] ?? 5;
@@ -82,6 +82,10 @@ function update_books( $data ) {
 		}
 	}
 	put_json( IMPORT_CHECKSUM_DATA, $checksums );
+
+	$data['return'] = array(
+		'status' => 'Skipped ' . esc_html( $skipped ) . ' books',
+	);
 
 	if ( empty( $data['next_page'] ) ) {
 		echo "\n";
