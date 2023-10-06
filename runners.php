@@ -160,9 +160,9 @@ function delete_books( $data ) {
 
 function fetch_book_data( $data ) {
 	$books = array();
-	// $books = make_book_list();
-	// $json  = wp_json_encode( $books );
-	// file_put_contents( IMPORT_BOOK_DATA, $json );
+	$books = make_book_list();
+	$json  = wp_json_encode( $books );
+	file_put_contents( IMPORT_BOOK_DATA, $json );
 	$timestamp = time();
 	$text      = 'Books: ' . count( $books ) . ' Imported at ' . date( 'Y-m-d H:i:s', $timestamp );
 

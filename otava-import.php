@@ -6,9 +6,6 @@ use Nicebooks\Isbn\Exception\InvalidIsbnException;
 use Nicebooks\Isbn\Isbn;
 use Nicebooks\Isbn\IsbnTools;
 
-use JsonStreamingParser\Listener\InMemoryListener;
-use JsonStreamingParser\Parser;
-
 /**
  * Generate the list of books.
  *
@@ -144,23 +141,8 @@ function get_import_data() {
 		// Replace ¤¤¤¤¤ with newlines.
 		$data = str_replace( '¤¤¤¤¤', '\\n', $data );
 
-		// Write the raw json to disk.
-		file_put_contents( IMPORT_RAW_DATA, $data );
-
-		$stream   = fopen( IMPORT_RAW_DATA, 'r' );
-		$listener = new InMemoryListener();
-		try {
-			$parser = new Parser( $stream, $listener );
-			$parser->parse();
-			fclose( $stream );
-		} catch ( Exception $e ) {
-			fclose( $stream );
-			throw $e;
-		}
-
 		// Parse JSON.
-		$parsed_data = $listener->getJson();
-
+		$parsed_data = json_decode( $data, true, 512, JSON_INVALID_UTF8_SUBSTITUTE );
 		if ( ! empty( $parsed_data ) && is_array( $parsed_data ) ) {
 			return $parsed_data;
 		}

@@ -86,13 +86,10 @@ function parse_dates( &$post, $dates ) {
 	}
 
 	if ( strlen( $date ) === 8 ) {
-		$date_string = substr( $date, 0, 4 ) . '-' . substr( $date, 4, 2 ) . '-' . substr( $date, 6, 2 );
-		if ( strtotime( $date_string ) < time() ) {
-			$post['post_date'] = $date_string . ' 00:00:00';
-		} else {
-			$datetime = new \DateTime( $date_string );
-			$datetime->modify( '+6 months' );
-			$post['post_date'] = $datetime->format( 'Y-m-d H:i:s' );
+		$date_string       = substr( $date, 0, 4 ) . '-' . substr( $date, 4, 2 ) . '-' . substr( $date, 6, 2 );
+		$post['post_date'] = $date_string . ' 00:00:00';
+		if ( ( strtotime( $date_string ) - time() ) > 15768000 ) { // More than half a year in the future.
+			$post['post_status'] = 'draft';
 		}
 	}
 
@@ -198,7 +195,6 @@ function update_book_versions( $post_id, $versions ) {
 		add_row( 'versions', $version, $post_id );
 	}
 }
-
 
 function get_isbn_list() {
 	$isbn = array();
