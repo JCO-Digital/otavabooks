@@ -52,6 +52,7 @@ function update_book_object( int $id, array $item, array $tags = array() ) {
 		'ID'           => $id,
 		'post_title'   => $item['title'],
 		'post_content' => $item['content'],
+		'post_status'  => 'publish',
 	);
 	$date        = parse_dates( $update_book, $item['dates'] );
 

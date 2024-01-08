@@ -49,7 +49,9 @@ function import_books( $data ): array {
 }
 
 /**
- * @param array $max Maximum updated items per run.
+ * Update a number of book posts.
+ *
+ * @param array $data Data passed from runner handler.
  *
  * @return array
  */
@@ -100,7 +102,13 @@ function update_books( $data ) {
 	return $data;
 }
 
-function update_book( $isbn ) {
+/**
+ * 
+ *
+ * @param string $isbn 
+ * @return void 
+ */
+function update_book( string $isbn ) {
 	$isbns     = get_isbn_list();
 	$books     = get_json( IMPORT_BOOK_DATA );
 	$checksums = get_json( IMPORT_CHECKSUM_DATA );
