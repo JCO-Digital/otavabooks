@@ -66,6 +66,9 @@ function update_books( \Jcore\Runner\Arguments $data ): \Jcore\Runner\Arguments 
 	if ( empty( $data->next_page ) ) {
 		echo "\n";
 		echo 'Updated ' . esc_html( $data->data['updated'] ) . " books\n";
+		if ( $data->data['imported'] ) {
+			echo 'Imported ' . esc_html( $data->data['imported'] ) . " books\n";
+		}
 		if ( $data->data['skipped'] ) {
 			echo 'Skipped ' . esc_html( $data->data['skipped'] ) . " books\n";
 		}
