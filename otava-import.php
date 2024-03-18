@@ -62,6 +62,13 @@ function make_book_list() {
 	return $data;
 }
 
+/**
+ * Add a spearate version of the book that can be added to the book object.
+ *
+ * @param mixed $isbn ISBN of book version.
+ * @param mixed $row Book data.
+ * @return array
+ */
 function add_version( $isbn, $row ) {
 	$asu = explode( ' ', $row['asu'], 2 );
 
@@ -75,6 +82,16 @@ function add_version( $isbn, $row ) {
 	);
 }
 
+/**
+ * Create and return the book object.
+ *
+ * @param mixed $row The book data.
+ * @param mixed $isbn ISBN
+ * @param array $categories
+ * @param array $versions
+ * @param int   $timestamp
+ * @return array
+ */
 function add_book( $row, $isbn, $categories = array(), $versions = array(), $timestamp = 0 ) {
 	$thema = array();
 	foreach ( array( $row['thema_1'], $row['thema_2'], $row['thema_3'] ) as $item ) {

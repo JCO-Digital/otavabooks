@@ -104,7 +104,6 @@ function set_ilmestymis( $post_id, $date ) {
 	return ( strtotime( $date_string ) > time() );
 }
 
-
 /**
  * Update the meta values for the books.
  *
@@ -306,7 +305,7 @@ function clean_tulossa() {
 		if ( strtotime( $date ) < time() ) {
 			++$cleaned;
 			wp_remove_object_terms( $post->ID, 'tulossa', 'otava_kategoria' );
-			echo "Cleaned {$post->post_title}.<br/>";
+			echo esc_html( "Cleaned {$post->post_title}." );
 		}
 	}
 
