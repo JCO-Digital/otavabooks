@@ -57,6 +57,22 @@ add_filter(
 	}
 );
 
+/**
+ * Don't set the future type when date is in the future.
+ *
+ * @param mixed $post_data The post data passed to the filter.
+ * @return mixed
+ */
+function prevent_future_type( $post_data ) {
+	if ( $post_data['post_status'] === 'future' && $post_data['post_type'] === IMPORT_POST_TYPE ) {
+		$post_data['post_status'] = 'publish';
+	}
+	return $post_data;
+}
+
+add_filter( 'wp_insert_post_data', '\otavabooks\prevent_future_type' );
+remove_action( 'future_post', '_future_post_hook' );
+
 add_filter(
 	'jcore_runner_functions',
 	function ( $functions ) {

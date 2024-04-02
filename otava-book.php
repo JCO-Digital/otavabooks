@@ -72,7 +72,7 @@ function update_book_object( int $id, array $item, array $tags = array() ) {
 
 /**
  * @param array $post The post array.
- * @param array $item The json data from the import.
+ * @param array $dates The json data from the import.
  *
  * @return string
  */
@@ -92,9 +92,9 @@ function parse_dates( &$post, $dates ) {
 		if ( ( strtotime( $date_string ) - time() ) > 15768000 ) { // More than half a year in the future.
 			$post['post_status'] = 'draft';
 		}
+		return $date_string;
 	}
-
-	return $date;
+	return false;
 }
 
 function set_ilmestymis( $post_id, $date ) {

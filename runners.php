@@ -55,12 +55,16 @@ function update_books( \Jcore\Runner\Arguments $data ): \Jcore\Runner\Arguments 
 			}
 		}
 	}
-	if ( count( $books ) > $data->page * $per_page ) {
-		$data->set_next_page();
-	}
 
+	$total     = count( $books );
+	$processed = $data->page * $per_page;
+	if ( $total > $processed ) {
+		$data->set_next_page();
+	} else {
+		$processed = $total;
+	}
 	$data->return = array(
-		'status' => 'Processed books ' . $data->page * $per_page . ' of ' . count( $books ),
+		'status' => 'Processed books ' . $processed . ' of ' . $total,
 	);
 
 	if ( empty( $data->next_page ) ) {
