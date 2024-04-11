@@ -312,7 +312,7 @@ function cover_check( \Jcore\Runner\Arguments $data ): \Jcore\Runner\Arguments {
 }
 
 
-function get_recent_books_sql( $nr = 64, $page = 0 ) {
+function get_recent_books_sql( $nr = 64, $page = 1 ) {
 	if ( ! is_int( $nr ) || ! is_int( $page ) ) {
 		echo 'Malformed arguments!';
 
@@ -320,14 +320,15 @@ function get_recent_books_sql( $nr = 64, $page = 0 ) {
 	}
 	global $wpdb;
 
-	$offset = $nr * $page;
+	$offset = $nr * ( $page - 1 );
 
-	$sql = "
+	$sql = $wpdb->prepare(
+		"
 		SELECT
 			post.ID,
 			post.post_title,
 			isbn.meta_value as isbn,
-			str_to_date(ilmestymis.meta_value, '%Y%m%d') as pvm
+			str_to_date(ilmestymis.meta_value, '%%Y-%%m-%%d') as pvm
 		FROM wp_posts as post
 		LEFT JOIN wp_postmeta as isbn
 		ON post.ID = isbn.post_id
@@ -337,11 +338,13 @@ function get_recent_books_sql( $nr = 64, $page = 0 ) {
 		AND ilmestymis.meta_key = 'ilmestymispvm'
 		WHERE post.post_type = 'otava_book'
 		AND post.post_status = 'publish'
-		AND str_to_date(ilmestymis.meta_value, '%Y%m%d') < now()
+		AND str_to_date(ilmestymis.meta_value, '%%Y-%%m-%%d') < now()
 		ORDER BY pvm DESC
-		LIMIT $nr
-		OFFSET $offset
-		";
-
+		LIMIT %d
+		OFFSET %d
+		",
+		$nr,
+		$offset
+	);
 	return $wpdb->get_results( $sql, ARRAY_A );
 }
