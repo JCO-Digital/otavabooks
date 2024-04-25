@@ -275,7 +275,7 @@ function set_tulossa() {
 		AND ilmestymis.meta_key = 'ilmestymispvm'
 		WHERE post.post_type = 'otava_book'
 		AND post.post_status = 'publish'
-		AND str_to_date(ilmestymis.meta_value, '%Y%m%d') > now()
+		AND str_to_date(ilmestymis.meta_value, '%Y-%m-%d') > now()
 		";
 
 	$set = 0;
