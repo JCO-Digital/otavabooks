@@ -222,10 +222,10 @@ function cover_check( \Jcore\Runner\Arguments $data ): \Jcore\Runner\Arguments {
 
 			// If it exists and has been checked less than a day ago.
 			if (
-			isset( $covers[ $isbn ] ) &&
-			! empty( $covers[ $isbn ]['id'] ) &&
-			! empty( $covers[ $isbn ]['category'] ) &&
-			( time() - $covers[ $isbn ]['timestamp'] ) < ( 24 * 60 * 60 )
+				isset( $covers[ $isbn ] ) &&
+				! empty( $covers[ $isbn ]['id'] ) &&
+				! empty( $covers[ $isbn ]['category'] ) &&
+				( time() - $covers[ $isbn ]['timestamp'] ) < ( 24 * 60 * 60 )
 			) {
 				echo "Found already checked book with isbn: $isbn\n";
 				++$data->data['skipped'];
@@ -277,7 +277,6 @@ function cover_check( \Jcore\Runner\Arguments $data ): \Jcore\Runner\Arguments {
 				'timestamp' => time(),
 				'updated'   => $update_ts,
 			);
-
 		}
 
 		// Check that each category has enough books.
@@ -329,11 +328,11 @@ function get_recent_books_sql( $nr = 64, $page = 1 ) {
 			post.post_title,
 			isbn.meta_value as isbn,
 			str_to_date(ilmestymis.meta_value, '%%Y-%%m-%%d') as pvm
-		FROM wp_posts as post
-		LEFT JOIN wp_postmeta as isbn
+		FROM {$wpdb->prefix}posts as post
+		LEFT JOIN {$wpdb->prefix}postmeta as isbn
 		ON post.ID = isbn.post_id
 		AND isbn.meta_key = 'isbn'
-		LEFT JOIN wp_postmeta as ilmestymis
+		LEFT JOIN {$wpdb->prefix}postmeta as ilmestymis
 		ON post.ID = ilmestymis.post_id
 		AND ilmestymis.meta_key = 'ilmestymispvm'
 		WHERE post.post_type = 'otava_book'

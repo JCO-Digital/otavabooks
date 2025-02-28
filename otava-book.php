@@ -268,9 +268,9 @@ function set_tulossa() {
 		SELECT
 			post.ID,
 			post.post_title,
-            ilmestymis.meta_value as pvm
-		FROM wp_posts as post
-		LEFT JOIN wp_postmeta as ilmestymis
+			ilmestymis.meta_value as pvm
+		FROM {$wpdb->prefix}posts as post
+		LEFT JOIN {$wpdb->prefix}postmeta as ilmestymis
 		ON post.ID = ilmestymis.post_id
 		AND ilmestymis.meta_key = 'ilmestymispvm'
 		WHERE post.post_type = 'otava_book'
@@ -290,7 +290,7 @@ function set_tulossa() {
 function clean_tulossa() {
 	$args    = array(
 		'post_type'      => IMPORT_POST_TYPE,
-		'posts_per_page' => - 1,
+		'posts_per_page' => -1,
 		'tax_query'      => array(
 			array(
 				'taxonomy' => 'otava_kategoria',
