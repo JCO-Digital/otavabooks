@@ -37,7 +37,6 @@ function update_books( \Jcore\Runner\Arguments $data ): \Jcore\Runner\Arguments 
 			$id = create_book_object( $book );
 			if ( $id ) {
 				echo 'Imported: ' . esc_html( $book['title'] ) . "\n";
-				$checksums[ $book['isbn'] ] = $book['checksum'];
 				++$data->data['imported'];
 			} elseif ( is_null( $id ) ) {
 				++$data->data['skipped'];
