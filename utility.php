@@ -10,8 +10,8 @@ function delete_books( $delete = 20 ) {
 	);
 	foreach ( get_posts( $args ) as $post ) {
 		wp_delete_post( $post->ID, true );
-		$deleted ++;
-		echo "Deleted: " . $post->ID . "<br/>\n";
+		++$deleted;
+		echo 'Deleted: ' . $post->ID . "<br/>\n";
 	}
 
 	return $deleted;
@@ -20,10 +20,12 @@ function delete_books( $delete = 20 ) {
 function clean_terms( $delete = 20 ) {
 	foreach ( \otavabooks\get_otava_taxonomies() as $taxo => $labels ) {
 		$taxo_name = 'otava_' . $taxo;
-		$terms     = get_terms( array(
-			'taxonomy'   => $taxo_name,
-			'hide_empty' => false,
-		) );
+		$terms     = get_terms(
+			array(
+				'taxonomy'   => $taxo_name,
+				'hide_empty' => false,
+			)
+		);
 		foreach ( $terms as $t ) {
 			if ( $t->count === 0 ) {
 				wp_delete_term( $t->term_id, $taxo_name );
@@ -83,7 +85,7 @@ function check_for_cover( $isbn ) {
 
 const CDN_BASE_URL = 'https://mediapankki.otava.fi/api/v1/assets/by-isbn/';
 
-function get_cdn_cover_url ( $isbn, $max_width = false, $max_height = false ) {
+function get_cdn_cover_url( $isbn, $max_width = false, $max_height = false ) {
 	try {
 		$isbn_object = Isbn::of( $isbn );
 		$arguments   = array();
@@ -109,7 +111,6 @@ function get_cdn_cover_url ( $isbn, $max_width = false, $max_height = false ) {
 
 		return false;
 	}
-
 }
 
 
@@ -119,7 +120,7 @@ function redirect_books() {
 		$page = get_page_by_path( $matches[2], OBJECT, 'otava_book' );
 		if ( ! empty( $page ) ) {
 			$url = get_permalink( $page->ID );
-			if ( !empty($url) && wp_redirect( $url ) ) {
+			if ( ! empty( $url ) && wp_redirect( $url ) ) {
 				exit;
 			}
 		}

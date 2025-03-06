@@ -5,13 +5,13 @@ namespace otavabooks;
 /**
  * Match Authors to author pages.
  *
- * @param int $post_id
+ * @param int    $post_id
  * @param string $authors
- * @param array $tags
+ * @param array  $tags
  *
  * @return array
  */
-function match_authors( int $post_id, array $authors, array &$tags = [] ) {
+function match_authors( int $post_id, array $authors, array &$tags = array() ) {
 	if ( empty( $authors ) ) {
 		return array();
 	}

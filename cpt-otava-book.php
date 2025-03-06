@@ -36,7 +36,7 @@ function otava_book() {
 			'author',
 			'thumbnail',
 			'revisions',
-			'custom-fields'
+			'custom-fields',
 		),
 		'taxonomies'          => array(
 			'otava_sarja',
@@ -46,7 +46,7 @@ function otava_book() {
 			'otava_kategoria',
 			'otava_sidosasu',
 			'otava_katalogi',
-			'post_tag'
+			'post_tag',
 		),
 		'hierarchical'        => false,
 		'public'              => true,
@@ -72,14 +72,14 @@ add_action( 'init', 'otavabooks\otava_book', 0 );
 
 // Register Custom Taxonomies.
 function otava_taxonomies() {
-	foreach (get_otava_taxonomies() as $taxo => $labels) {
-		$taxo_name = 'otava_' .$taxo;
-		$rewrite = array(
+	foreach ( get_otava_taxonomies() as $taxo => $labels ) {
+		$taxo_name = 'otava_' . $taxo;
+		$rewrite   = array(
 			'slug'         => $taxo,
 			'with_front'   => false,
 			'hierarchical' => false,
 		);
-		$args    = array(
+		$args      = array(
 			'labels'            => $labels,
 			'hierarchical'      => false,
 			'public'            => true,

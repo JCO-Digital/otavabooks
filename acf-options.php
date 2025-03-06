@@ -14,7 +14,7 @@ function activate_acf_options() {
 				'menu_title'  => __( 'Kirjatuojan asetukset' ),
 				'menu_slug'   => 'book-importer-settings',
 				'capability'  => 'edit_posts',
-				'parent_slug' => 'options-general.php'
+				'parent_slug' => 'options-general.php',
 			)
 		);
 	}

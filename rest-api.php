@@ -2,17 +2,20 @@
 
 namespace otavabooks;
 
-
 add_action( 'rest_api_init', 'otavabooks\restEndpoints' );
 
 const ns = 'otavabooks/v1';
 
 function restEndpoints() {
-	register_rest_route( ns, '/cover/(?P<isbn>.+)', array(
-		'methods'             => 'PATCH',
-		'callback'            => 'otavabooks\updateCover',
-		'permission_callback' => '__return_true',
-	) );
+	register_rest_route(
+		ns,
+		'/cover/(?P<isbn>.+)',
+		array(
+			'methods'             => 'PATCH',
+			'callback'            => 'otavabooks\updateCover',
+			'permission_callback' => '__return_true',
+		)
+	);
 }
 
 /*
@@ -29,12 +32,11 @@ function updateCover( $request ): \WP_REST_Response {
 		'has_cover' => $has_cover,
 		'timestamp' => time(),
 	);
-	foreach ($covers as $key => $cover) {
-		$response->set_data($key);
+	foreach ( $covers as $key => $cover ) {
+		$response->set_data( $key );
 	}
 
 	put_json( BOOK_COVER_DATA, $covers );
 
 	return $response;
 }
-
