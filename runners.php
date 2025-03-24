@@ -166,7 +166,11 @@ function fetch_book_data( \Jcore\Runner\Arguments $data ): \Jcore\Runner\Argumen
 	return $data;
 }
 
-/** @return array  */
+/**
+ * Fetch book data and save it to a JSON file.
+ *
+ * @return array An array of book data.
+ */
 function do_book_data_fetch(): array {
 	$books = make_book_list();
 	$json  = wp_json_encode( $books );
