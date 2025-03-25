@@ -71,6 +71,9 @@ function make_book_list() {
 			}
 		}
 	}
+	printf( 'Added %d books to list before cleanup.', count( $data ) );
+	echo "\n";
+
 	foreach ( $data as $id => &$book ) {
 		if ( empty( $book['isbn'] ) || empty( $book['categories'] ) ) {
 			unset( $data[ $id ] );
