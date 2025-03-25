@@ -1,4 +1,11 @@
 <?php
+/**
+ * This file contains functions for managing book data, including fetching, updating,
+ * importing, and deleting book posts. It also includes functions for checking book covers
+ * and updating terms related to book publishing dates.
+ *
+ * @package otavabooks
+ */
 
 namespace otavabooks;
 
@@ -153,9 +160,10 @@ function delete_books( \Jcore\Runner\Arguments $data ): \Jcore\Runner\Arguments 
  * @return \Jcore\Runner\Arguments
  */
 function fetch_book_data( \Jcore\Runner\Arguments $data ): \Jcore\Runner\Arguments {
+	echo "Starting fetch.\n";
 	$books     = do_book_data_fetch();
 	$timestamp = time();
-	$text      = 'Books: ' . count( $books ) . ' Imported at ' . gmdate( 'Y-m-d H:i:s', $timestamp );
+	$text      = sprintf( 'Books: %d Imported at %s', count( $books ), gmdate( 'Y-m-d H:i:s', $timestamp ) );
 
 	echo esc_html( $text );
 
@@ -173,7 +181,12 @@ function fetch_book_data( \Jcore\Runner\Arguments $data ): \Jcore\Runner\Argumen
  */
 function do_book_data_fetch(): array {
 	$books = make_book_list();
-	$json  = wp_json_encode( $books );
+	printf( 'Made book list with %d books.', count( $books ) );
+	echo "\n";
+	$json = wp_json_encode( $books );
+	// phpcs:ignore
+	printf( 'Writing %d characters to file.', strlen( $json ) );
+	echo "\n";
 	// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents
 	file_put_contents( IMPORT_BOOK_DATA, $json );
 
@@ -215,7 +228,7 @@ function cover_check( \Jcore\Runner\Arguments $data ): \Jcore\Runner\Arguments {
 	$books = get_recent_books_sql( $books_per_page, $data->page );
 	if ( ! empty( $books ) ) {
 
-		echo "Iteration: $data->page of Cover checking\n";
+		echo esc_html( sprintf( "Iteration: %d of Cover checking\n", $data->page ) );
 
 		foreach ( $books as $book ) {
 			$isbn = $book['isbn'];

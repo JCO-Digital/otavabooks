@@ -9,13 +9,33 @@ use Nicebooks\Isbn\IsbnTools;
 /**
  * Generate the list of books.
  *
+ * This function generates a list of books from the imported data.
+ * It iterates through each row of the imported data, checks if the row is valid,
+ * and then adds the book to the list. It handles both master products and
+ * product versions, ensuring that the most up-to-date information is used.
+ * It also categorizes books and adds version information.
+ *
+ * The function uses the IsbnTools class to validate ISBNs and the Isbn class
+ * to format them. It also uses helper functions like add_book and add_version
+ * to structure the book data.
+ *
+ * The function returns an array of book objects, each containing details
+ * such as ISBN, title, content, authors, categories, versions, and timestamps.
+ *
  * @return array
  */
 function make_book_list() {
 	$tools      = new IsbnTools();
 	$data       = array();
 	$publishers = get_publishers_setting();
-	foreach ( get_import_data() as $row ) {
+	$import     = get_import_data();
+	if ( empty( $import ) ) {
+		return array();
+	}
+	printf( 'Read %d objects from file.', count( $import ) );
+	echo "\n";
+
+	foreach ( $import as $row ) {
 		if ( isset( $row['kantanumero'] ) && in_array( strtolower( $row['tulosyksikko'] ), $publishers, true ) && $tools->isValidIsbn( $row['isbn'] ) ) {
 			try {
 				$isbn   = Isbn::of( $row['isbn'] );
@@ -83,16 +103,15 @@ function add_version( $isbn, $row ) {
 }
 
 /**
- * Create and return the book object.
+ * Add a book to the list.
  *
- * @param mixed $row The book data.
- * @param mixed $isbn ISBN
- * @param array $categories
- * @param array $versions
- * @param int   $timestamp
+ * @param array  $row Book data.
+ * @param string $isbn ISBN of book.
+ * @param array  $categories Categories of book.
+ * @param array  $versions Versions of book.
  * @return array
  */
-function add_book( $row, $isbn, $categories = array(), $versions = array(), $timestamp = 0 ) {
+function add_book( $row, $isbn, $categories = array(), $versions = array() ) {
 	$thema = array();
 	foreach ( array( $row['thema_1'], $row['thema_2'], $row['thema_3'] ) as $item ) {
 		if ( preg_match( '/([A-Z]+) (.*)/', $item, $match ) ) {
@@ -129,6 +148,12 @@ function add_book( $row, $isbn, $categories = array(), $versions = array(), $tim
 	);
 }
 
+/**
+ * Parse a list of items from a string.
+ *
+ * @param string $field The string to parse.
+ * @return array
+ */
 function parse_list( $field ) {
 	$items = array();
 	foreach ( explode( ';', $field ) as $raw ) {
