@@ -214,14 +214,27 @@ function get_books() {
 	return $wpdb->get_results( $sql, ARRAY_A );
 }
 
-$categories = get_json( __DIR__ . '/categories.json' );
-function get_otava_cat( $raw, $default = '' ) {
+/**
+ * Searches the locally stored categories.json for matches to the provided category.
+ *
+ * @param string $raw               The category to be searched.
+ * @param string $$default_category The default category to return, if a match isn't found.
+ *
+ * @return string  The matched category, or the default if no match is found.
+ */
+function get_otava_cat( $raw, $default_category = '' ) {
 	if ( get_disable_categories_setting() ) {
 		return $raw;
 	}
 	global $categories;
+	if ( empty( $categories ) ) {
+		echo "Loading categories.\n";
+		$categories = get_json( __DIR__ . '/categories.json' );
+		printf( "Loaded %d categories.\n", count( $categories ) );
+	}
+
 	$orig     = trim( $raw );
-	$category = $default;
+	$category = $default_category;
 	$found    = false;
 	foreach ( $categories as $cat => $search ) {
 		if ( in_array( $orig, $search ) ) {
