@@ -74,13 +74,22 @@ function make_book_list() {
 	printf( 'Added %d books to list before cleanup.', count( $data ) );
 	echo "\n";
 
+	$empty_isbn = 0;
+	$empty_cat  = 0;
 	foreach ( $data as $id => &$book ) {
 		if ( empty( $book['isbn'] ) || empty( $book['categories'] ) ) {
+			if ( empty( $book['isbn'] ) ) {
+				++$empty_isbn;
+			}
+			if ( empty( $book['categories'] ) ) {
+				++$empty_cat;
+			}
 			unset( $data[ $id ] );
 		} else {
 			$book['checksum'] = md5( wp_json_encode( $book ) );
 		}
 	}
+	printf( "Empty - ISBN: %d / Categories: %d\n", intval( $empty_isbn ), intval( $empty_cat ) );
 
 	return $data;
 }
