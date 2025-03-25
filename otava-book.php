@@ -226,17 +226,17 @@ function get_otava_cat( $raw, $default_category = '' ) {
 	if ( get_disable_categories_setting() ) {
 		return $raw;
 	}
-	global $categories;
-	if ( empty( $categories ) ) {
+	global $otava_loaded_categories;
+	if ( empty( $otava_loaded_categories ) ) {
 		echo "Loading categories.\n";
-		$categories = get_json( __DIR__ . '/categories.json' );
-		printf( "Loaded %d categories.\n", count( $categories ) );
+		$otava_loaded_categories = get_json( __DIR__ . '/categories.json' );
+		printf( "Loaded %d categories.\n", count( $otava_loaded_categories ) );
 	}
 
 	$orig     = trim( $raw );
 	$category = $default_category;
 	$found    = false;
-	foreach ( $categories as $cat => $search ) {
+	foreach ( $otava_loaded_categories as $cat => $search ) {
 		if ( in_array( $orig, $search ) ) {
 			$category = $cat;
 			$found    = true;
@@ -246,7 +246,7 @@ function get_otava_cat( $raw, $default_category = '' ) {
 	if ( ! $found ) {
 		$needle = preg_replace( '/[^a-zåäö]+/u', '', mb_strtolower( $orig ) );
 		$dist   = ceil( strlen( $needle ) / 16 );
-		foreach ( $categories as $cat => $search ) {
+		foreach ( $otava_loaded_categories as $cat => $search ) {
 			foreach ( $search as $item ) {
 				if ( levenshtein( $needle, preg_replace( '/[^a-zåäö]+/u', '', mb_strtolower( $item ) ) ) <= $dist ) {
 					$category = $cat;
