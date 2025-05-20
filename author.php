@@ -3,13 +3,19 @@
 namespace otavabooks;
 
 /**
- * Match Authors to author pages.
+ * Matches authors from a given array of author names to existing authors in the database.
  *
- * @param int    $post_id
- * @param string $authors
- * @param array  $tags
+ * This function attempts to find matching authors in the database based on the provided
+ * author names. It updates the 'kirjailija' field (using `update_field`) of a given post
+ * with the IDs of the matched authors. It also returns an array of author names that
+ * were not found in the database.
  *
- * @return array
+ * @param int   $post_id The ID of the post to update the 'kirjailija' field for.
+ * @param array $authors An array of author names to match against the database.
+ * @param array $tags    An optional array to which all author names are added. Passed by reference.
+ *                       Defaults to an empty array.
+ *
+ * @return array An array of author names that were not found in the database.
  */
 function match_authors( int $post_id, array $authors, array &$tags = array() ) {
 	if ( empty( $authors ) ) {
@@ -30,15 +36,16 @@ function match_authors( int $post_id, array $authors, array &$tags = array() ) {
 	}
 	$linked = array();
 	foreach ( $GLOBALS['author_list'] as $id => $names ) {
-		$match = true;
+		$match = 0;
 		foreach ( $names as $name ) {
-			if ( ! in_array( $name, $match_authors, true ) ) {
-				$match = false;
+			if ( in_array( $name, $match_authors, true ) ) {
+				echo "Match {$name}\n";
+				++$match;
 			}
 		}
-		if ( $match ) {
+		if ( $match === count( $names ) ) {
 			// Save the ID:s for linking.
-			$linked[ $id ] = count( $names );
+			$linked[ $id ] = $match;
 			// Remove names from toimittanut.
 			foreach ( $names as $name ) {
 				$key = array_search( $name, $toimittanut, true );
@@ -64,15 +71,7 @@ function get_author_list() {
 	foreach ( get_authors() as $author ) {
 		$names = array();
 		foreach ( preg_split( '/ (-|ja|&) /', $author['name_index'] ) as $name ) {
-			$parts = explode( ',', trim( $name, ' ,' ), 2 );
-			if ( ! empty( $parts[0] ) && ! empty( $parts[1] ) ) {
-				$names[] = trim( $parts[1], ' ,' ) . ' ' . trim( $parts[0], ' ,' );
-			} else {
-				$parts = explode( ' ', trim( $name, ' ,' ), 2 );
-				if ( count( $parts ) > 1 ) {
-					$names[] = trim( $parts[0], ' ,' ) . ' ' . trim( $parts[1], ' ,' );
-				}
-			}
+			$names[] = parse_name( $name );
 		}
 		if ( ! empty( $names ) ) {
 			sort( $names );

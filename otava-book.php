@@ -71,12 +71,20 @@ function update_book_object( int $id, array $item, array $tags = array() ) {
 }
 
 /**
- * @param array $post The post array.
- * @param array $dates The json data from the import.
+ * Parses date information from the provided array and formats it for use in a WordPress post.
  *
- * @return string
+ * This function attempts to extract a valid date from the 'dates' array within the input item.
+ * It prioritizes 'ensimmainen', then 'ilmestymis', and finally 'vvvvkk' keys. If a valid
+ * 8-character date string (YYYYMMDD) is found, it's converted to 'YYYY-MM-DD' format and
+ * used to set the post's 'post_date'.  If the resulting date is more than half a year in the
+ * future, the post status is set to 'draft'.
+ *
+ * @param array $post  Reference to the post array to be modified.  The 'post_date' and 'post_status' keys may be updated.
+ * @param array $dates An array containing potential date strings, with keys like 'ensimmainen', 'ilmestymis', and 'vvvvkk'.
+ *
+ * @return string|false The formatted date string ('YYYY-MM-DD') if a valid date is found and processed; otherwise, false.
  */
-function parse_dates( &$post, $dates ) {
+function parse_dates( array &$post, array $dates ) {
 	// Do the date magic.
 	$date = $dates['ensimmainen'];
 	if ( empty( $date ) ) {
@@ -97,6 +105,14 @@ function parse_dates( &$post, $dates ) {
 	return false;
 }
 
+/**
+ * Sets the 'ilmestymispvm' (release date) custom field for a post and determines if the date is in the future.
+ *
+ * @param int    $post_id The ID of the post to update.
+ * @param string $date    The release date in 'YYYY-MM-DD' format.
+ *
+ * @return bool True if the release date is in the future, false otherwise.
+ */
 function set_ilmestymis( $post_id, $date ) {
 	update_field( 'ilmestymispvm', $date, $post_id );
 	$date_string = substr( $date, 0, 4 ) . '-' . substr( $date, 4, 2 ) . '-' . substr( $date, 6, 2 );
@@ -105,12 +121,12 @@ function set_ilmestymis( $post_id, $date ) {
 }
 
 /**
- * Update the meta values for the books.
+ * Updates the book's meta fields, categories, tags, and taxonomies.
  *
- * @param int   $post_id The post id.
- * @param array $item    The json data from the import.
+ * @param int   $post_id The ID of the post to update.
+ * @param array $item    The JSON data containing the book's information.
  */
-function update_book_meta( $post_id, $item ) {
+function update_book_meta( int $post_id, array $item ) {
 	// Get the categories.
 	$tags       = array();
 	$categories = array();
@@ -171,8 +187,9 @@ function update_book_meta( $post_id, $item ) {
 
 	$toimittaja = match_authors( $post_id, $item['authors'], $tags );
 	foreach ( $item['toimittaja'] as $name ) {
-		$toimittaja[] = parse_name( $name );
-		$tags[]       = parse_name( $name );
+		$parsed_name  = parse_name( $name );
+		$toimittaja[] = $parsed_name;
+		$tags[]       = $parsed_name;
 	}
 
 	wp_set_post_terms( $post_id, $toimittaja, 'otava_toimittaja', false );
@@ -264,10 +281,10 @@ function get_otava_cat( $raw, $default_category = '' ) {
  *
  * @param string $name Name to process.
  *
- * @return mixed|string
+ * @return string
  */
-function parse_name( $name ) {
-	$parts = explode( ',', $name, 2 );
+function parse_name( string $name ): string {
+	$parts = explode( ',', trim( $name, ' ,' ), 2 );
 	if ( count( $parts ) > 1 ) {
 		return trim( $parts[1] ) . ' ' . trim( $parts[0] );
 	}
