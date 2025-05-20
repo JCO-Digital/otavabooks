@@ -21,7 +21,7 @@ function update_books( \Jcore\Runner\Arguments $data ): \Jcore\Runner\Arguments 
 	} else {
 		$books = get_json( IMPORT_BOOK_DATA );
 	}
-	$per_page = 45;
+	$per_page = 100;
 	$isbn     = get_isbn_list();
 	$offset   = $per_page * ( $data->page - 1 );
 	if ( empty( $data->data['updated'] ) ) {

@@ -39,7 +39,7 @@ function match_authors( int $post_id, array $authors, array &$tags = array() ) {
 		$match = 0;
 		foreach ( $names as $name ) {
 			if ( in_array( $name, $match_authors, true ) ) {
-				echo "Match {$name}\n";
+				echo "Match author: {$name}\n";
 				++$match;
 			}
 		}
@@ -71,7 +71,10 @@ function get_author_list() {
 	foreach ( get_authors() as $author ) {
 		$names = array();
 		foreach ( preg_split( '/ (-|ja|&) /', $author['name_index'] ) as $name ) {
-			$names[] = parse_name( $name );
+			$parsed_name = parse_name( $name );
+			if ( ! in_array( $parsed_name, $names, true ) ) {
+				$names[] = $parsed_name;
+			}
 		}
 		if ( ! empty( $names ) ) {
 			sort( $names );
