@@ -145,10 +145,10 @@ function update_book_meta( int $post_id, array $item ) {
 		update_field( 'kirjastoluokka', $item['kirjastoluokka'], $post_id );
 	}
 	if ( ! empty( $item['kuvittaja'] ) ) {
+		match_authors( $post_id, $item['kuvittaja'], $tags, 'kuvittaja' );
 		$kuvittaja = array();
 		foreach ( $item['kuvittaja'] as $name ) {
 			$kuvittaja[] = parse_name( $name );
-			$tags[]      = parse_name( $name );
 		}
 		if ( ! empty( $kuvittaja ) ) {
 			wp_set_post_terms( $post_id, $kuvittaja, 'otava_kuvittaja', false );

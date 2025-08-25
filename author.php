@@ -17,7 +17,7 @@ namespace otavabooks;
  *
  * @return array An array of author names that were not found in the database.
  */
-function match_authors( int $post_id, array $authors, array &$tags = array() ) {
+function match_authors( int $post_id, array $authors, array &$tags = array(), string $field = 'kirjailija' ) {
 	if ( empty( $authors ) ) {
 		return array();
 	}
@@ -27,30 +27,30 @@ function match_authors( int $post_id, array $authors, array &$tags = array() ) {
 	}
 
 	$match_authors = array();
-	$toimittanut   = array();
+	$unmatched     = array();
 	foreach ( $authors as $kt ) {
 		$author          = parse_name( $kt );
 		$tags[]          = $author;
 		$match_authors[] = $author;
-		$toimittanut[]   = $author;
+		$unmatched[]     = $author;
 	}
 	$linked = array();
 	foreach ( $GLOBALS['author_list'] as $id => $names ) {
 		$match = 0;
 		foreach ( $names as $name ) {
 			if ( in_array( $name, $match_authors, true ) ) {
-				echo "Match author: {$name}\n";
+				echo "Match author ({$field}): {$name}\n";
 				++$match;
 			}
 		}
 		if ( $match === count( $names ) ) {
 			// Save the ID:s for linking.
 			$linked[ $id ] = $match;
-			// Remove names from toimittanut.
+			// Remove names from unmatched.
 			foreach ( $names as $name ) {
-				$key = array_search( $name, $toimittanut, true );
+				$key = array_search( $name, $unmatched, true );
 				if ( false !== $key ) {
-					unset( $toimittanut[ $key ] );
+					unset( $unmatched[ $key ] );
 				}
 			}
 		}
@@ -61,9 +61,9 @@ function match_authors( int $post_id, array $authors, array &$tags = array() ) {
 	foreach ( $linked as $id => $count ) {
 		$linked_array[] = "$id";
 	}
-	update_field( 'kirjailija', $linked_array, $post_id );
+	update_field( $field, $linked_array, $post_id );
 
-	return $toimittanut;
+	return $unmatched;
 }
 
 function get_author_list() {

@@ -53,6 +53,31 @@ if ( function_exists( 'acf_add_local_field_group' ) ) :
 					'return_format'     => 'object',
 				),
 				array(
+					'key'               => 'field_56448c9yu6c4c',
+					'label'             => 'Kuvittaja',
+					'name'              => 'kuvittaja',
+					'type'              => 'relationship',
+					'instructions'      => '',
+					'required'          => 0,
+					'conditional_logic' => 0,
+					'wrapper'           => array(
+						'width' => '',
+						'class' => '',
+						'id'    => '',
+					),
+					'post_type'         => array(
+						0 => 'otava_author',
+					),
+					'taxonomy'          => array(),
+					'filters'           => array(
+						0 => 'search',
+					),
+					'elements'          => '',
+					'min'               => '',
+					'max'               => '',
+					'return_format'     => 'object',
+				),
+				array(
 					'key'               => 'field_56448cc0e6c4c',
 					'label'             => 'Alkuteos',
 					'name'              => 'alkuteos',
