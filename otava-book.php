@@ -41,11 +41,18 @@ function create_book_object( array $item, array $tags = array() ) {
 }
 
 /**
- * @param int   $id   The post id.
- * @param array $item The json data from the import.
+ * Updates an existing book post and its meta fields.
+ *
+ * This function updates the post with the provided ID using the data from the import array.
+ * It sets the post title, content, and status, updates the post date if a valid date is found,
+ * and updates associated meta fields and versions. If the date is more than half a year in the
+ * future, the post status is set to 'draft'.
+ *
+ * @param int   $id   The post ID to update.
+ * @param array $item The JSON data from the import.
  * @param array $tags Optional extra tags.
  *
- * @return false|int|\WP_Error
+ * @return false|int|\WP_Error The updated post ID on success, false on failure, or WP_Error on error.
  */
 function update_book_object( int $id, array $item, array $tags = array() ) {
 	$update_book = array(
