@@ -22,18 +22,23 @@ function create_book_object( array $item, array $tags = array() ) {
 		$date     = parse_dates( $new_book, $item['dates'] );
 
 		if ( ! empty( $date ) ) {
-			// Insert the post into the database.
-			$post_id = wp_insert_post( $new_book );
+			// Insert the post into the database. $wp_error = true so failures say why.
+			$post_id = wp_insert_post( $new_book, true );
+			if ( is_wp_error( $post_id ) ) {
+				printf( "Failed to insert %s: %s\n", esc_html( $item['isbn'] ), esc_html( $post_id->get_error_message() ) );
+				return false;
+			}
 			if ( ! empty( $post_id ) ) {
 				update_post_meta( $post_id, 'isbn', trim( $item['isbn'] ) );
+				// Mark provenance, so hand-made books can be told apart from imported ones.
+				update_post_meta( $post_id, '_otava_imported', 1 );
 				set_ilmestymis( $post_id, $date );
-				update_book_meta( $post_id, $item );
+				update_book_meta( $post_id, $item, $date );
 				update_book_versions( $post_id, $item['versions'] );
 
 				return $post_id;
-			} else {
-				return false;
 			}
+			return false;
 		}
 	}
 
@@ -64,10 +69,23 @@ function update_book_object( int $id, array $item, array $tags = array() ) {
 	$date        = parse_dates( $update_book, $item['dates'] );
 
 	if ( ! empty( $date ) ) {
-		$post_id = wp_update_post( $update_book );
+		$post_id = wp_update_post( $update_book, true );
+		if ( is_wp_error( $post_id ) ) {
+			printf( "Failed to update %d: %s\n", (int) $id, esc_html( $post_id->get_error_message() ) );
+			return false;
+		}
 		if ( ! empty( $post_id ) ) {
+			/*
+			 * Re-assert the ISBN. A post whose meta was lost, or stored in an older format,
+			 * would otherwise never be repaired -- the importer would create a duplicate and
+			 * the delete runner would then remove this original.
+			 */
+			update_post_meta( $post_id, 'isbn', trim( $item['isbn'] ) );
+			// The book is in the feed, so clear any pending-removal markers.
+			delete_post_meta( $post_id, OTAVABOOKS_MISSING_SINCE_META );
+			delete_post_meta( $post_id, OTAVABOOKS_MISSING_RUNS_META );
 			set_ilmestymis( $post_id, $date );
-			update_book_meta( $post_id, $item );
+			update_book_meta( $post_id, $item, $date );
 			update_book_versions( $post_id, $item['versions'] );
 
 			return $post_id;
@@ -113,90 +131,101 @@ function parse_dates( array &$post, array $dates ) {
 }
 
 /**
- * Sets the 'ilmestymispvm' (release date) custom field for a post and determines if the date is in the future.
+ * Sets the 'ilmestymispvm' (release date) custom field for a post.
+ *
+ * $date is already 'YYYY-MM-DD' (parse_dates() formats it), which is also what the ACF field and
+ * set_tulossa()'s str_to_date( '%Y-%m-%d' ) expect, so it is stored as-is.
  *
  * @param int    $post_id The ID of the post to update.
  * @param string $date    The release date in 'YYYY-MM-DD' format.
  *
- * @return bool True if the release date is in the future, false otherwise.
+ * @return void
  */
-function set_ilmestymis( $post_id, $date ) {
+function set_ilmestymis( $post_id, $date ): void {
 	update_field( 'ilmestymispvm', $date, $post_id );
-	$date_string = substr( $date, 0, 4 ) . '-' . substr( $date, 4, 2 ) . '-' . substr( $date, 6, 2 );
-
-	return ( strtotime( $date_string ) > time() );
 }
 
 /**
  * Updates the book's meta fields, categories, tags, and taxonomies.
  *
- * @param int   $post_id The ID of the post to update.
- * @param array $item    The JSON data containing the book's information.
+ * Fields and terms are written unconditionally, including when the feed value is empty, so that
+ * a value removed upstream is also removed here instead of lingering forever.
+ *
+ * @param int    $post_id The ID of the post to update.
+ * @param array  $item    The JSON data containing the book's information.
+ * @param string $date    The release date in 'YYYY-MM-DD' format, as returned by parse_dates().
  */
-function update_book_meta( int $post_id, array $item ) {
+function update_book_meta( int $post_id, array $item, string $date = '' ) {
 	// Get the categories.
 	$tags       = array();
 	$categories = array();
 
 	if ( ! empty( $item['categories'] ) ) {
-		foreach ( $item['categories'] as $category ) {
+		foreach ( array_unique( $item['categories'] ) as $category ) {
 			$categories[] = $category;
 			$tags[]       = $category;
 		}
 	}
 
-	if ( ! empty( $item['alkuteos'] ) ) {
-		update_field( 'alkuteos', $item['alkuteos'], $post_id );
+	update_field( 'alkuteos', $item['alkuteos'] ?? '', $post_id );
+	update_field( 'kirjastoluokka', $item['kirjastoluokka'] ?? '', $post_id );
+
+	$kuvittaja = array();
+	foreach ( $item['kuvittaja'] ?? array() as $name ) {
+		$kuvittaja[] = parse_name( $name );
 	}
-	if ( ! empty( $item['kirjastoluokka'] ) ) {
-		update_field( 'kirjastoluokka', $item['kirjastoluokka'], $post_id );
+	match_authors( $post_id, $item['kuvittaja'] ?? array(), $tags, 'kuvittaja' );
+	wp_set_post_terms( $post_id, $kuvittaja, 'otava_kuvittaja', false );
+
+	$suomentaja = array();
+	foreach ( $item['suomentaja'] ?? array() as $name ) {
+		$parsed_name  = parse_name( $name );
+		$suomentaja[] = $parsed_name;
+		$tags[]       = $parsed_name;
 	}
-	if ( ! empty( $item['kuvittaja'] ) ) {
-		match_authors( $post_id, $item['kuvittaja'], $tags, 'kuvittaja' );
-		$kuvittaja = array();
-		foreach ( $item['kuvittaja'] as $name ) {
-			$kuvittaja[] = parse_name( $name );
-		}
-		if ( ! empty( $kuvittaja ) ) {
-			wp_set_post_terms( $post_id, $kuvittaja, 'otava_kuvittaja', false );
-		}
+	wp_set_post_terms( $post_id, $suomentaja, 'otava_kaantaja', false );
+
+	$sarja = $item['sarja'] ?? '';
+	if ( is_array( $sarja ) ) {
+		$sarja = $sarja[0] ?? '';
 	}
-	if ( ! empty( $item['suomentaja'] ) ) {
-		$suomentaja = array();
-		foreach ( $item['suomentaja'] as $name ) {
-			$suomentaja[] = parse_name( $name );
-			$tags[]       = parse_name( $name );
-		}
-		if ( ! empty( $suomentaja ) ) {
-			wp_set_post_terms( $post_id, $suomentaja, 'otava_kaantaja', false );
-		}
+	if ( '' !== $sarja ) {
+		wp_set_post_terms( $post_id, array( $sarja ), 'otava_sarja', false );
+		$tags[] = $sarja;
+	} else {
+		wp_set_post_terms( $post_id, array(), 'otava_sarja', false );
 	}
-	if ( ! empty( $item['sarja'] ) ) {
-		if ( is_array( $item['sarja'] ) ) {
-			$item['sarja'] = $item['sarja'][0];
-		}
-		wp_set_post_terms( $post_id, array( $item['sarja'] ), 'otava_sarja', false );
-		$tags[] = $item['sarja'];
-	}
+
 	$asu = array();
 	foreach ( $item['versions'] as $version ) {
-		if ( ! in_array( $version['asu_text'], $asu, true ) ) {
+		if ( '' !== $version['asu_text'] && ! in_array( $version['asu_text'], $asu, true ) ) {
 			$asu[] = $version['asu_text'];
 		}
 	}
-	if ( ! empty( $asu ) ) {
-		wp_set_post_terms( $post_id, $asu, 'otava_sidosasu', false );
-	}
-	if ( ! empty( $item['tulosyksikko'] ) ) {
-		wp_set_post_terms( $post_id, array( $item['tulosyksikko'] ), 'otava_julkaisija', false );
-		$tags[] = $item['tulosyksikko'];
-	}
+	wp_set_post_terms( $post_id, $asu, 'otava_sidosasu', false );
+
+	/*
+	 * Otava's own titles carry an empty 'tulosyksikko' in the feed (the vast majority of rows),
+	 * so without this mapping they would be the only books with no publisher term at all.
+	 */
+	$julkaisija = '' !== ( $item['tulosyksikko'] ?? '' ) ? $item['tulosyksikko'] : 'Otava';
+	wp_set_post_terms( $post_id, array( $julkaisija ), 'otava_julkaisija', false );
+	$tags[] = $julkaisija;
 
 	$toimittaja = match_authors( $post_id, $item['authors'], $tags );
 	foreach ( $item['toimittaja'] as $name ) {
 		$parsed_name  = parse_name( $name );
 		$toimittaja[] = $parsed_name;
 		$tags[]       = $parsed_name;
+	}
+
+	/*
+	 * otava_kategoria is replaced wholesale here, which drops the 'tulossa' term. set_tulossa()
+	 * only runs at the very end of an import run, so without re-adding it inline every upcoming
+	 * book would drop out of the "tulossa" listings for the length of the run.
+	 */
+	if ( '' !== $date && strtotime( $date ) > time() ) {
+		$categories[] = 'tulossa';
 	}
 
 	wp_set_post_terms( $post_id, $toimittaja, 'otava_toimittaja', false );
@@ -220,21 +249,96 @@ function update_book_versions( $post_id, $versions ) {
 	}
 }
 
-function get_isbn_list() {
+/**
+ * Post statuses the delete runner is allowed to consider.
+ *
+ * Deliberately excludes 'trash' and 'auto-draft'. Keeping trashed posts in this list is what
+ * would let a later page re-visit a post the previous page trashed -- and a second
+ * wp_delete_post() on an already-trashed post destroys it for good.
+ *
+ * Drafts belong here: books released more than half a year out are legitimately drafts
+ * (see parse_dates()).
+ *
+ * @return string[]
+ */
+function get_managed_statuses(): array {
+	return array( 'publish', 'draft', 'pending', 'private', 'future' );
+}
+
+/**
+ * Map of post ID => ISBN for every book the importer manages.
+ *
+ * Books with no ISBN meta are omitted. They cannot be matched against the feed, so treating
+ * them as "missing from the feed" would delete every hand-made book on the site. Call
+ * get_books_without_isbn() to report on them instead.
+ *
+ * @param string[]|null $statuses Post statuses to include. Defaults to get_managed_statuses().
+ * @return array<int,string>
+ */
+function get_isbn_list( ?array $statuses = null ) {
 	$isbn = array();
-	foreach ( get_books() as $book ) {
-		$isbn[ $book['ID'] ] = $book['isbn'];
+	foreach ( get_books( $statuses ) as $book ) {
+		if ( '' === trim( (string) $book['isbn'] ) ) {
+			continue;
+		}
+		$isbn[ (int) $book['ID'] ] = $book['isbn'];
 	}
 
 	return $isbn;
 }
 
-function get_books() {
-	global $wpdb;
-	$tablename = $wpdb->prefix . 'posts';
-	$tablemeta = $wpdb->prefix . 'postmeta';
-	$sql       = "SELECT post.*, meta.meta_value as isbn FROM $tablename AS post LEFT JOIN $tablemeta AS meta on post.ID = meta.post_id AND meta.meta_key = 'isbn' WHERE post.post_type = '" . IMPORT_POST_TYPE . "' ORDER BY post.post_date DESC";
+/**
+ * Books that carry no ISBN meta, so the importer cannot match them against the feed.
+ *
+ * @param string[]|null $statuses Post statuses to include. Defaults to get_managed_statuses().
+ * @return array
+ */
+function get_books_without_isbn( ?array $statuses = null ): array {
+	$books = array();
+	foreach ( get_books( $statuses ) as $book ) {
+		if ( '' === trim( (string) $book['isbn'] ) ) {
+			$books[] = $book;
+		}
+	}
 
+	return $books;
+}
+
+/**
+ * Fetch book posts joined to their ISBN meta.
+ *
+ * @param string[]|null $statuses Post statuses to include. Defaults to get_managed_statuses().
+ *                                Pass an empty array for every status, including trash.
+ * @return array
+ */
+function get_books( ?array $statuses = null ) {
+	global $wpdb;
+
+	if ( null === $statuses ) {
+		$statuses = get_managed_statuses();
+	}
+
+	$where  = 'post.post_type = %s';
+	$params = array( IMPORT_POST_TYPE );
+
+	if ( ! empty( $statuses ) ) {
+		$where   .= ' AND post.post_status IN ( ' . implode( ', ', array_fill( 0, count( $statuses ), '%s' ) ) . ' )';
+		$params   = array_merge( $params, array_values( $statuses ) );
+	}
+
+	// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $where is built from literals and placeholders above.
+	$sql = $wpdb->prepare(
+		"SELECT post.ID, post.post_title, post.post_status, post.post_date, meta.meta_value as isbn
+		FROM {$wpdb->posts} AS post
+		LEFT JOIN {$wpdb->postmeta} AS meta
+			ON post.ID = meta.post_id AND meta.meta_key = 'isbn'
+		WHERE {$where}
+		ORDER BY post.post_date DESC",
+		$params
+	);
+	// phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+
+	// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery
 	return $wpdb->get_results( $sql, ARRAY_A );
 }
 

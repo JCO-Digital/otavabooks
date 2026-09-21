@@ -20,6 +20,9 @@ namespace otavabooks;
  */
 function match_authors( int $post_id, array $authors, array &$tags = array(), string $field = 'kirjailija' ) {
 	if ( empty( $authors ) ) {
+		// Clear the relation, so a creator removed upstream is removed here too.
+		update_field( $field, array(), $post_id );
+
 		return array();
 	}
 

@@ -66,6 +66,40 @@ function put_json( $filename, $data ) {
 	return file_put_contents( $filename, $json );
 }
 
+/**
+ * Write JSON to disk atomically, verifying the result before it replaces the previous file.
+ *
+ * The plain put_json() discards the file_put_contents() return value, so a short write (a full
+ * disk, say) silently truncates the file. For the import cache that is dangerous: a truncated book_data.json
+ * reads back as an empty array, which the delete runner would read as "every book was withdrawn".
+ * It is also not atomic, so the delete cron can read a file the fetch cron is midway through
+ * rewriting.
+ *
+ * @param string $filename Destination path.
+ * @param mixed  $data     Data to encode.
+ * @return bool True when the file was written and verified.
+ */
+function put_json_atomic( $filename, $data ) {
+	$json = wp_json_encode( $data );
+	if ( false === $json ) {
+		return false;
+	}
+
+	$temp = $filename . '.tmp';
+	// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents
+	$written = file_put_contents( $temp, $json, LOCK_EX );
+
+	// Verify the whole payload landed, and that it reads back as valid JSON.
+	if ( false === $written || strlen( $json ) !== $written || null === json_decode( (string) file_get_contents( $temp ), true ) ) {
+		// phpcs:ignore WordPress.PHP.NoSilencedErrors, WordPress.WP.AlternativeFunctions
+		@unlink( $temp );
+		return false;
+	}
+
+	// phpcs:ignore WordPress.WP.AlternativeFunctions.rename_rename
+	return rename( $temp, $filename );
+}
+
 function check_for_cover( $isbn ) {
 	if ( ! isset( $GLOBALS['book_covers'] ) || ! is_array( $GLOBALS['book_covers'] ) ) {
 		$GLOBALS['book_covers'] = get_json( BOOK_COVER_DATA );
